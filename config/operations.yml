@@ -5,7 +5,7 @@ release:
   rollback_owner: release-management
 
 review:
-  stale_after_days: 5
+  stale_after_days: 7
   required_reviewers: 1
   escalation_channel: engineering-ops
 
