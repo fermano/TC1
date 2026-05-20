@@ -1,11 +1,9 @@
 # Hidden test coverage gap
 
-Scenario type: missing tests
-Simulated opened: 2026-05-17
-Simulated last activity: 2026-05-19
-Expected blocker: coverage exists for happy path only
-Risk level: high
-Linear tracking: no
+First raised: 2026-05-17
+Last update: 2026-05-19
+
+Review concern: coverage exists for happy path only
 
 ## Change
 
