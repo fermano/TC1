@@ -1,11 +1,9 @@
 # Failing CI marker
 
-Scenario type: failing CI
-Simulated opened: 2026-05-01
-Simulated last activity: 2026-05-07
-Expected blocker: fixture-validation is red after a changed required path
-Risk level: high
-Linear tracking: yes
+First raised: 2026-05-01
+Last update: 2026-05-07
+
+Review concern: baseline-validation is red after a changed required path
 
 ## Change
 
