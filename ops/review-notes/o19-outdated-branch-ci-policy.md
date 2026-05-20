@@ -1,11 +1,9 @@
 # Outdated branch CI policy
 
-Scenario type: outdated branch
-Simulated opened: 2026-05-01
-Simulated last activity: 2026-05-05
-Expected blocker: branch predates merged review default changes
-Risk level: medium
-Linear tracking: no
+First raised: 2026-05-01
+Last update: 2026-05-05
+
+Review concern: branch predates merged review default changes
 
 ## Change
 
