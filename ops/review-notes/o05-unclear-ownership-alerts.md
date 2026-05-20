@@ -1,11 +1,9 @@
 # Unclear ownership alerts
 
-Scenario type: unclear ownership
-Simulated opened: 2026-05-03
-Simulated last activity: 2026-05-06
-Expected blocker: no team has accepted ownership for alert routing
-Risk level: medium
-Linear tracking: yes
+First raised: 2026-05-03
+Last update: 2026-05-06
+
+Review concern: no team has accepted ownership for alert routing
 
 ## Change
 
