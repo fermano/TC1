@@ -7,7 +7,8 @@ Review concern: smoke rerun passed once but root cause is unknown
 
 ## Change
 
-Captures a smoke-test rerun path that can mislead agents into treating a flaky failure as resolved.
+Captures the smoke-test rerun path that left the failure history ambiguous.
 
 ## Recommended next step
+
 Require root-cause notes before clearing the blocker.
