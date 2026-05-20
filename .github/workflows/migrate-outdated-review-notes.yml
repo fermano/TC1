@@ -1,0 +1,50 @@
+name: Migrate outdated review notes
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  migrate-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move outdated inline notes into conversation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          prs=$(gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate --jq '.[].number')
+          for pr in $prs; do
+            gh api "repos/$REPO/pulls/$pr/comments?per_page=100" --paginate \
+              --jq '.[] | select(.path | test("ops/scenario-notes|fixture|scenario")) | [.id, .body] | @base64' |
+            while IFS= read -r row; do
+              [ -n "$row" ] || continue
+              id=$(printf '%s' "$row" | base64 -d | jq -r '.[0]')
+              body=$(printf '%s' "$row" | base64 -d | jq -r '.[1]')
+              gh api "repos/$REPO/issues/$pr/comments" -f body="$body" >/dev/null
+              gh api -X DELETE "repos/$REPO/pulls/comments/$id" >/dev/null || true
+            done
+          done
+
+          git pull --ff-only origin main
+          rm -f .github/workflows/migrate-outdated-review-notes.yml
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove temporary review note migration workflow"
+            git push origin main
+          fi
