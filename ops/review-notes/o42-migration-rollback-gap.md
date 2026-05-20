@@ -1,11 +1,9 @@
 # Migration rollback gap
 
-Scenario type: migration rollback gap
-Simulated opened: 2026-05-10
-Simulated last activity: 2026-05-15
-Expected blocker: migration plan has no rollback checkpoint
-Risk level: critical
-Linear tracking: yes
+First raised: 2026-05-10
+Last update: 2026-05-15
+
+Review concern: migration plan has no rollback checkpoint
 
 ## Change
 
