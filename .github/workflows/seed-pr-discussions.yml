@@ -1,5 +1,5 @@
 name: Seed PR discussions
-# trigger: 2026-05-20T19:36:00Z
+# trigger: 2026-05-20T19:45:00Z
 
 on:
   push:
@@ -17,9 +17,9 @@ permissions:
 jobs:
   seed-discussions:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
-      - name: Add synthetic discussion reviews
+      - name: Resume synthetic discussion reviews
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
@@ -27,11 +27,23 @@ jobs:
           node <<'NODE'
           const token = process.env.GH_TOKEN;
           const [owner, repo] = process.env.REPOSITORY.split('/');
-          const targetPrs = Array.from({ length: 49 }, (_, index) => index + 17);
+          const plan = [
+            { number: 19, skipTurns: 5 },
+            ...Array.from({ length: 46 }, (_, index) => ({ number: index + 20, skipTurns: 0 }))
+          ];
           const marker = 'DISCUSSION-SEED-2026-05-20';
-          const batchSize = 5;
+          const batchSize = 10;
+          const normalDelayMs = 12000;
 
           const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          function isThrottle(error) {
+            return /submitted too quickly|secondary rate|abuse/i.test(error.message);
+          }
+
+          function isResourceLimit(error) {
+            return /RESOURCE_LIMITS_EXCEEDED|Resource limits/i.test(error.message);
+          }
 
           async function githubGraphql(query, variables) {
             const response = await fetch('https://api.github.com/graphql', {
@@ -53,13 +65,15 @@ jobs:
 
           async function withRetry(label, fn) {
             let lastError;
-            for (let attempt = 1; attempt <= 4; attempt += 1) {
+            for (let attempt = 1; attempt <= 5; attempt += 1) {
               try {
                 return await fn();
               } catch (error) {
                 lastError = error;
-                console.log(`${label} failed on attempt ${attempt}: ${error.message.slice(0, 600)}`);
-                await sleep(2000 * attempt);
+                const delay = isThrottle(error) ? 45000 * attempt : 5000 * attempt;
+                console.log(`${label} failed on attempt ${attempt}: ${error.message.slice(0, 700)}`);
+                console.log(`Waiting ${delay}ms before retry`);
+                await sleep(delay);
               }
             }
             throw lastError;
@@ -123,7 +137,7 @@ jobs:
             });
           }
 
-          async function addReviewBatch(number, context, comments, batchIndex, batchCount) {
+          async function submitReview(number, context, comments, label) {
             const mutation = `
               mutation AddSyntheticDiscussion($pullRequestId: ID!, $body: String!, $comments: [DraftPullRequestReviewComment!]!) {
                 addPullRequestReview(input: {
@@ -138,29 +152,45 @@ jobs:
                 }
               }
             `;
-            const body = `${marker}: synthetic discussion batch ${batchIndex + 1}/${batchCount} for PR #${number}.`;
-            return withRetry(`seed PR #${number} batch ${batchIndex + 1}/${batchCount}`, () => githubGraphql(mutation, {
+            const body = `${marker}: synthetic discussion ${label} for PR #${number}.`;
+            return githubGraphql(mutation, {
               pullRequestId: context.id,
               body,
               comments
-            }));
+            });
+          }
+
+          async function addReviewBatch(number, context, comments, label) {
+            if (comments.length === 0) return;
+            try {
+              await withRetry(`seed PR #${number} ${label}`, () => submitReview(number, context, comments, label));
+            } catch (error) {
+              if (isResourceLimit(error) && comments.length > 1) {
+                const middle = Math.ceil(comments.length / 2);
+                await addReviewBatch(number, context, comments.slice(0, middle), `${label}.a`);
+                await sleep(normalDelayMs);
+                await addReviewBatch(number, context, comments.slice(middle), `${label}.b`);
+                return;
+              }
+              throw error;
+            }
           }
 
           let createdInlineComments = 0;
-          for (const number of targetPrs) {
-            const context = await pullRequestContext(number);
-            const comments = discussionComments(number, context.title, context.path);
+          for (const item of plan) {
+            const context = await pullRequestContext(item.number);
+            const comments = discussionComments(item.number, context.title, context.path).slice(item.skipTurns);
             const batches = [];
             for (let start = 0; start < comments.length; start += batchSize) {
               batches.push(comments.slice(start, start + batchSize));
             }
-            console.log(`Seeding PR #${number}: ${context.title} (${context.path}) with ${comments.length} comments in ${batches.length} batches`);
+            console.log(`Seeding PR #${item.number}: ${context.title} (${context.path}); skipTurns=${item.skipTurns}; remaining=${comments.length}; batches=${batches.length}`);
             for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
-              await addReviewBatch(number, context, batches[batchIndex], batchIndex, batches.length);
+              await addReviewBatch(item.number, context, batches[batchIndex], `batch ${batchIndex + 1}/${batches.length}`);
               createdInlineComments += batches[batchIndex].length;
-              await sleep(750);
+              await sleep(normalDelayMs);
             }
           }
 
-          console.log(`Seeded ${targetPrs.length} PRs with ${createdInlineComments} inline discussion comments.`);
+          console.log(`Seeded resumed plan with ${createdInlineComments} inline discussion comments.`);
           NODE
