@@ -1,11 +1,9 @@
 # Oversized runbook expansion
 
-Scenario type: oversized PR
-Simulated opened: 2026-05-05
-Simulated last activity: 2026-05-10
-Expected blocker: mixes alert routing, rollback, CI, and migration guidance in one review
-Risk level: medium
-Linear tracking: no
+First raised: 2026-05-05
+Last update: 2026-05-10
+
+Review concern: mixes alert routing, rollback, CI, and migration guidance in one review
 
 ## Change
 
