@@ -1,0 +1,457 @@
+name: Seed messy operations signals
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/seed-messy-ops-signals.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  seed-messy-signals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git and remove temporary workflow from main
+        run: |
+          set -euo pipefail
+          git config user.name "tc1-fixture-bot"
+          git config user.email "tc1-fixture-bot@users.noreply.github.com"
+          git checkout -B main origin/main
+          git rm .github/workflows/seed-messy-ops-signals.yml
+          GIT_AUTHOR_DATE="2026-05-20T20:05:00-03:00" GIT_COMMITTER_DATE="2026-05-20T20:05:00-03:00" git commit -m "Remove temporary messy ops seeding workflow"
+          git push origin main
+
+      - name: Create adversarial labels
+        run: |
+          set -euo pipefail
+          make_label() {
+            local name="$1" color="$2" description="$3"
+            gh label create "$name" --color "$color" --description "$description" || gh label edit "$name" --color "$color" --description "$description" || true
+          }
+          make_label ready-to-merge 0e8a16 "Synthetic label: claims the PR can merge now."
+          make_label do-not-merge b60205 "Synthetic label: blocks merge despite other ready signals."
+          make_label in-progress fbca04 "Synthetic label: work is active or unresolved."
+          make_label bugg d73a4a "Synthetic typo label for bug."
+          make_label criticla b60205 "Synthetic typo label for critical."
+          make_label listo-para-merge 0e8a16 "Spanish ready-to-merge label."
+          make_label no-fusionar b60205 "Spanish do-not-merge label."
+          make_label seguridad d93f0b "Spanish security concern label."
+          make_label needs-human-filter 5319e7 "Human/bot attribution intentionally ambiguous."
+          make_label surface-green-deep-red c5def5 "Surface signal is green but detailed signal is red."
+          make_label dependabot-noise cfd3d7 "Trivial dependency bump noise."
+          make_label security-disguised ee0701 "Security-sensitive change disguised as dependency noise."
+          make_label status-flag-lies f9d0c4 "Draft/open status conflicts with actual risk."
+          make_label linear-ambiguous 1d76db "Linear reference is incomplete, indirect, or misleading."
+          make_label experimental 7057ff "Experiment not intended for production."
+          make_label dependencies 0366d6 "Dependency update."
+
+      - name: Seed messy pull requests and reopened issue
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          created_manifest="/tmp/tc1-messy-fixture-manifest.md"
+          printf "# Messy operations fixture manifest\n\n" > "$created_manifest"
+
+          add_comment() {
+            local num="$1"
+            local tmp
+            tmp=$(mktemp)
+            cat > "$tmp"
+            gh pr comment "$num" --body-file "$tmp"
+            rm -f "$tmp"
+            sleep 1
+          }
+
+          add_labels() {
+            local num="$1"
+            shift
+            for label in "$@"; do
+              gh pr edit "$num" --add-label "$label" || true
+            done
+          }
+
+          create_pr_from_file() {
+            local branch="$1" title="$2" file_path="$3" commit_message="$4" author_date="$5" draft_flag="$6" body_file="$7"
+            git checkout -B "$branch" origin/main
+            mkdir -p "$(dirname "$file_path")"
+            cat > "$file_path"
+            git add "$file_path"
+            GIT_AUTHOR_DATE="$author_date" GIT_COMMITTER_DATE="$author_date" git commit -m "$commit_message"
+            git push --force origin "$branch"
+            local args=(pr create --base main --head "$branch" --title "$title" --body-file "$body_file" --maintainer-edit)
+            if [[ "$draft_flag" == "draft" ]]; then
+              args+=(--draft)
+            fi
+            local url
+            url=$(gh "${args[@]}")
+            local num="${url##*/}"
+            printf "- #%s %s - %s\n" "$num" "$url" "$title" >> "$created_manifest"
+            echo "$num"
+          }
+
+          # 1. Draft but production-critical.
+          cat > /tmp/body-draft-prod.md <<'EOF'
+          ## Summary
+          Draft PR that is actually production-critical. The draft flag is intentionally misleading: the simulated release captain says this must ship before the Wednesday token-rotation window.
+
+          ## Non-obvious tracking
+          Fixes the thing Sarah mentioned in standup. There is no direct Linear URL in this body. The only external breadcrumb is a fake Slack permalink: https://acme-corp.slack.com/archives/C05TC1OPS/p1714567200000000
+
+          ## Simulated metadata
+          - Scenario type: draft PR that is production-critical; status flag lies
+          - Simulated opened date: 2026-04-30
+          - Simulated last activity date: 2026-05-17
+          - Expected blocker: release owner must decide whether draft status or release note is authoritative
+          - Risk level: Critical
+          - Linear tracking exists: Ambiguous, via standup/Slack reference only
+          - Simulated labels: ready-to-merge, do-not-merge, bug, wontfix, in-progress, criticla, seguridad
+
+          ## Acceptance notes
+          - Verify token scopes for scheduled jobs before merge.
+          - Require security review even though one comment says this is a small config-only patch.
+          - Recommended next action: classify as release blocker, then ask author why it is still draft.
+          EOF
+          pr_draft=$(create_pr_from_file "messy/draft-prod-critical-token-scope" "[DRAFT] Patch production token scope regression [sim 2026-04-30]" "ops/messy-signals/draft-prod-critical-token-scope.md" "Simulate production critical draft token scope patch" "2026-04-30T09:18:00-03:00" draft /tmp/body-draft-prod.md <<'EOF'
+          # Production token scope patch
+
+          This synthetic fixture records a production-only token scope regression.
+
+          The file change is intentionally small, but the operational signal is high-risk: a draft PR marked as a release blocker with contradictory labels and indirect tracking.
+
+          Simulated changed area: scheduled job credential policy.
+          Recommended validation: replay token refresh on staging with the production policy matrix.
+          EOF
+          )
+          add_labels "$pr_draft" ready-to-merge do-not-merge bug wontfix in-progress criticla seguridad status-flag-lies linear-ambiguous needs-human-filter
+          add_comment "$pr_draft" <<'EOF'
+          [human-looking bot: @renata-qa] Simulated timestamp 2026-05-02T11:10:00-03:00. Actor class: automation using a human-style handle. The smoke replay passed, but it only covered staging tokens.
+          EOF
+          add_comment "$pr_draft" <<'EOF'
+          [bot-looking human: @maria-release-bot] Simulated timestamp 2026-05-03T16:42:00-03:00. Actor class: human release manager. I am treating this as production-critical despite the draft flag.
+          EOF
+          add_comment "$pr_draft" <<'EOF'
+          [github-actions[bot]] Simulated timestamp 2026-05-05T08:20:00-03:00. Draft status detected. Automated merge queue skipped this PR even though the `ready-to-merge` label is present.
+          EOF
+          add_comment "$pr_draft" <<'EOF'
+          [Sarah Chen] Simulated timestamp 2026-05-08T10:05:00-03:00. This is the standup item I mentioned; do not look only for a Linear URL.
+          EOF
+          add_comment "$pr_draft" <<'EOF'
+          [security-review-bot] Simulated timestamp 2026-05-11T13:29:00-03:00. Bot confidence: 0.42. Human review still required because token scope changes affect production rotations.
+          EOF
+
+          # 2. Non-draft but experimental, and supersedes an open PR.
+          cat > /tmp/body-experiment.md <<'EOF'
+          ## Summary
+          Non-draft PR that is clearly experimental. This is intentionally opened as ready for review, not as a draft, even though the implementation note says it should not ship.
+
+          Supersedes #42, but #42 is intentionally still open. Agents should read both PRs before treating this as the successor.
+
+          ## Non-obvious tracking
+          See TC1-47. In this fixture, TC1-47 is intentionally ambiguous and should resolve to a different plausible project, not necessarily the TC1 project.
+
+          ## Simulated metadata
+          - Scenario type: non-draft experimental PR; supersedes open PR; misleading Linear shorthand
+          - Simulated opened date: 2026-05-01
+          - Simulated last activity date: 2026-05-18
+          - Expected blocker: product decision and ownership split with #42
+          - Risk level: High
+          - Linear tracking exists: Ambiguous shorthand only
+          - Simulated labels: listo-para-merge, no-fusionar, experimental, bugg
+
+          ## Recommended next action
+          Confirm whether #42 should close, remain parallel, or become the base for this experiment.
+          EOF
+          pr_experiment=$(create_pr_from_file "messy/non-draft-experimental-cache-owner" "Try experimental cache ownership heuristic [sim 2026-05-01]" "ops/messy-signals/non-draft-experimental-cache-owner.md" "Simulate experimental cache ownership heuristic" "2026-05-01T14:03:00-03:00" open /tmp/body-experiment.md <<'EOF'
+          # Experimental cache ownership heuristic
+
+          This fixture change describes a speculative cache owner selector. It is not production-ready and deliberately lacks rollout controls.
+
+          The PR is not draft so agents must read the body rather than trusting the GitHub status flag.
+          EOF
+          )
+          add_labels "$pr_experiment" listo-para-merge no-fusionar experimental bugg status-flag-lies linear-ambiguous duplicate question
+          add_comment "$pr_experiment" <<'EOF'
+          [dependabot[bot] but actually Elena] Simulated timestamp 2026-05-02T12:00:00-03:00. I reused the bot account for a manual test. Please do not classify this as automated dependency work.
+          EOF
+          add_comment "$pr_experiment" <<'EOF'
+          [product-owner] Simulated timestamp 2026-05-06T15:15:00-03:00. We still need the product call on cache ownership. Superseding #42 is not approved.
+          EOF
+          add_comment "$pr_experiment" <<'EOF'
+          [reviewer: @carlos-bot] Simulated timestamp 2026-05-10T09:30:00-03:00. Human reviewer with a bot-like handle. I would block this until #42 is reconciled.
+          EOF
+
+          # 3. Surface green badge, detailed red gate.
+          cat > /tmp/body-green-red.md <<'EOF'
+          ## Summary
+          ![smoke](https://img.shields.io/badge/smoke-passing-brightgreen)
+
+          The badge above is green, but the required detail below is red. This tests agents that stop at surface-level CI signals.
+
+          ## Check detail snapshot
+          - `fixture-smoke / preview`: passing
+          - `fixture-smoke / docs`: passing
+          - `required: policy-gate`: failing, because the retention migration deletes a protected scenario row
+          - `required: release-approval`: pending since 2026-05-03
+
+          ## Simulated metadata
+          - Scenario type: green badge but failing required check in details
+          - Simulated opened date: 2026-05-02
+          - Simulated last activity date: 2026-05-16
+          - Expected blocker: required policy gate is failing despite green badge
+          - Risk level: Critical
+          - Linear tracking exists: No direct link; body says see TC1-47
+          - Simulated labels: ready-to-merge, do-not-merge, surface-green-deep-red
+
+          ## Recommended next action
+          Open check details and confirm which checks are required before considering merge.
+          EOF
+          pr_green=$(create_pr_from_file "messy/green-badge-red-required-check" "Add retention cleanup with green badge but red required gate [sim 2026-05-02]" "ops/messy-signals/green-badge-red-required-check.md" "Simulate green badge with failing required check details" "2026-05-02T12:36:00-03:00" open /tmp/body-green-red.md <<'EOF'
+          # Retention cleanup fixture
+
+          This file intentionally advertises green smoke status while documenting a failed required policy gate.
+
+          See TC1-47 for the operational conversation, but the issue may live outside the obvious TC1 project.
+          EOF
+          )
+          add_labels "$pr_green" ready-to-merge do-not-merge surface-green-deep-red bug criticla linear-ambiguous
+          add_comment "$pr_green" <<'EOF'
+          [ci-summary-bot] Simulated timestamp 2026-05-03T08:45:00-03:00. Overall badge: passing.
+          EOF
+          add_comment "$pr_green" <<'EOF'
+          [required-checks[bot]] Simulated timestamp 2026-05-03T08:47:00-03:00. Required `policy-gate` failed on protected scenario row deletion. This is the authoritative signal.
+          EOF
+          add_comment "$pr_green" <<'EOF'
+          [human: Priya S.] Simulated timestamp 2026-05-12T18:00:00-03:00. Please stop quoting the badge in status updates; the required gate is still red.
+          EOF
+
+          # 4. Latest simulated comment says LGTM, merging, but PR remains open.
+          cat > /tmp/body-lgtm.md <<'EOF'
+          ## Summary
+          Open PR where the latest simulated human activity says `LGTM, merging` from three weeks ago, but the PR was never merged.
+
+          ## Simulated metadata
+          - Scenario type: stale or done ambiguity; last human comment appears complete but state is open
+          - Simulated opened date: 2026-04-24
+          - Simulated last activity date: 2026-04-29
+          - Expected blocker: determine whether merge failed silently, author abandoned it, or the comment was performative
+          - Risk level: High
+          - Linear tracking exists: No
+          - Simulated labels: ready-to-merge, stale-review
+
+          ## Recommended next action
+          Treat this as stale until merge status, deployment evidence, and branch freshness are verified.
+          EOF
+          pr_lgtm=$(create_pr_from_file "messy/lgtm-unmerged-release-gate" "Release gate cleanup after LGTM but no merge [sim 2026-04-24]" "ops/messy-signals/lgtm-unmerged-release-gate.md" "Simulate LGTM unmerged release gate cleanup" "2026-04-24T17:25:00-03:00" open /tmp/body-lgtm.md <<'EOF'
+          # Release gate cleanup
+
+          This is a small fixture note for a release gate cleanup that appears done based on comments, while GitHub state remains open.
+          EOF
+          )
+          add_labels "$pr_lgtm" ready-to-merge needs-human-filter
+          add_comment "$pr_lgtm" <<'EOF'
+          [automation: merge-queue-shadow] Simulated timestamp 2026-04-27T10:18:00-03:00. Queue position reserved but never consumed.
+          EOF
+          add_comment "$pr_lgtm" <<'EOF'
+          [human: Maria Gomez] Simulated timestamp 2026-04-29T16:33:00-03:00. LGTM, merging
+          EOF
+
+          # 5. Force-pushed/rebased SHA pointer.
+          cat > /tmp/body-rebased.md <<'EOF'
+          ## Summary
+          Migration pointer PR that was force-pushed after Linear copied the old SHA. The old SHA should no longer be treated as the branch head.
+
+          ## Simulated metadata
+          - Scenario type: Linear ticket references stale pre-rebase SHA
+          - Simulated opened date: 2026-05-04
+          - Simulated last activity date: 2026-05-18
+          - Expected blocker: validate current branch head instead of stale SHA in ticket
+          - Risk level: Medium
+          - Linear tracking exists: Yes, but the SHA in the ticket is stale
+
+          ## Recommended next action
+          Compare branch head with any SHA copied into Linear before validating the ticket.
+          EOF
+          git checkout -B "messy/rebased-sha-migration-pointer" origin/main
+          mkdir -p ops/messy-signals
+          cat > ops/messy-signals/rebased-sha-migration-pointer.md <<'EOF'
+          # Rebased migration pointer
+
+          Initial wording that will be replaced by a force-pushed commit.
+          EOF
+          git add ops/messy-signals/rebased-sha-migration-pointer.md
+          GIT_AUTHOR_DATE="2026-05-04T09:12:00-03:00" GIT_COMMITTER_DATE="2026-05-04T09:12:00-03:00" git commit -m "Simulate initial migration pointer before rebase"
+          old_sha=$(git rev-parse HEAD)
+          git push --force origin "messy/rebased-sha-migration-pointer"
+          cat > ops/messy-signals/rebased-sha-migration-pointer.md <<EOF
+          # Rebased migration pointer
+
+          This branch was force-pushed after Linear copied the original head SHA.
+
+          Simulated stale SHA copied into Linear: $old_sha
+          Current branch head should be used instead.
+          EOF
+          git add ops/messy-signals/rebased-sha-migration-pointer.md
+          GIT_AUTHOR_DATE="2026-05-18T09:12:00-03:00" GIT_COMMITTER_DATE="2026-05-18T09:12:00-03:00" git commit --amend -m "Simulate rebased migration pointer after stale SHA copied"
+          git push --force origin "messy/rebased-sha-migration-pointer"
+          sed -i "s/stale pre-rebase SHA/stale pre-rebase SHA ${old_sha}/" /tmp/body-rebased.md
+          url=$(gh pr create --base main --head "messy/rebased-sha-migration-pointer" --title "Rebase migration pointer after Linear copied old SHA [sim 2026-05-04]" --body-file /tmp/body-rebased.md --maintainer-edit)
+          pr_rebased="${url##*/}"
+          printf "- #%s %s - Rebase migration pointer after Linear copied old SHA\n" "$pr_rebased" "$url" >> "$created_manifest"
+          add_labels "$pr_rebased" in-progress linear-ambiguous needs-human-filter
+          add_comment "$pr_rebased" <<EOF
+          [linear-sync-bot] Simulated timestamp 2026-05-04T09:15:00-03:00. Copied branch SHA $old_sha into Linear before the force-push.
+          EOF
+          add_comment "$pr_rebased" <<'EOF'
+          [human: Omar N.] Simulated timestamp 2026-05-18T10:10:00-03:00. I rebased this after the Linear note; please validate the current head, not the copied SHA.
+          EOF
+
+          # 6. Security fix disguised as dependency bump.
+          cat > /tmp/body-security-dep.md <<'EOF'
+          ## Summary
+          Bumps `jsonwebtoken` from 8.5.1 to 9.0.2.
+
+          This looks like routine dependabot noise, but it is intentionally a legitimate security fix. Agents should not filter it out only because the title begins with a dependency bump.
+
+          ## Simulated metadata
+          - Scenario type: security fix disguised as dependency bump
+          - Simulated opened date: 2026-05-06
+          - Simulated last activity date: 2026-05-19
+          - Expected blocker: security owner review plus compatibility assessment
+          - Risk level: Critical
+          - Linear tracking exists: To be semantically matched, no direct URL in PR body
+          - Simulated labels: dependencies, dependabot-noise, security-disguised, seguridad
+
+          ## Recommended next action
+          Prioritize above trivial dependency noise and ask for token validation coverage.
+          EOF
+          pr_security=$(create_pr_from_file "dependabot/npm_and_yarn/jsonwebtoken-9.0.2-security-disguised" "Bump jsonwebtoken from 8.5.1 to 9.0.2" "ops/dependabot-noise/jsonwebtoken-security.md" "Simulate jsonwebtoken security dependency bump" "2026-05-06T07:44:00-03:00" open /tmp/body-security-dep.md <<'EOF'
+          # jsonwebtoken dependency update
+
+          This synthetic dependency bump is intentionally security-relevant. It should not be dismissed with the trivial Dependabot PRs.
+          EOF
+          )
+          add_labels "$pr_security" dependencies dependabot-noise security-disguised seguridad criticla bug needs-human-filter
+          add_comment "$pr_security" <<'EOF'
+          [dependabot[bot]] Simulated timestamp 2026-05-06T07:45:00-03:00. Compatibility score: medium. Security relevance is not obvious from the title alone.
+          EOF
+          add_comment "$pr_security" <<'EOF'
+          [security: Nina P.] Simulated timestamp 2026-05-13T12:20:00-03:00. This is a real security fix disguised as a routine bump. Please do not batch-close it with noise.
+          EOF
+
+          # 20 trivial dependabot-style noise PRs.
+          deps=(
+            "urllib3|2.2.1|2.2.2|2026-05-01T10:00:00-03:00"
+            "requests|2.31.0|2.32.0|2026-05-01T10:15:00-03:00"
+            "pyyaml|6.0.1|6.0.2|2026-05-01T10:30:00-03:00"
+            "pytest|8.2.0|8.2.1|2026-05-01T10:45:00-03:00"
+            "black|24.4.0|24.4.2|2026-05-01T11:00:00-03:00"
+            "ruff|0.4.4|0.4.5|2026-05-01T11:15:00-03:00"
+            "mypy|1.10.0|1.10.1|2026-05-01T11:30:00-03:00"
+            "types-requests|2.31.0|2.32.0|2026-05-01T11:45:00-03:00"
+            "packaging|24.0|24.1|2026-05-01T12:00:00-03:00"
+            "certifi|2024.2.2|2024.6.2|2026-05-01T12:15:00-03:00"
+            "idna|3.6|3.7|2026-05-01T12:30:00-03:00"
+            "charset-normalizer|3.3.2|3.3.3|2026-05-01T12:45:00-03:00"
+            "cryptography|42.0.5|42.0.7|2026-05-01T13:00:00-03:00"
+            "click|8.1.7|8.1.8|2026-05-01T13:15:00-03:00"
+            "jinja2|3.1.3|3.1.4|2026-05-01T13:30:00-03:00"
+            "markupsafe|2.1.5|2.1.6|2026-05-01T13:45:00-03:00"
+            "pluggy|1.5.0|1.5.1|2026-05-01T14:00:00-03:00"
+            "coverage|7.5.1|7.5.2|2026-05-01T14:15:00-03:00"
+            "tomli|2.0.1|2.0.2|2026-05-01T14:30:00-03:00"
+            "typing-extensions|4.11.0|4.12.0|2026-05-01T14:45:00-03:00"
+          )
+          i=0
+          for dep in "${deps[@]}"; do
+            i=$((i + 1))
+            IFS='|' read -r pkg old new date <<< "$dep"
+            safe_pkg="${pkg//[^A-Za-z0-9._-]/-}"
+            branch="dependabot/pip/${safe_pkg}-${new}"
+            body="/tmp/body-${safe_pkg}.md"
+            cat > "$body" <<EOF
+          ## Summary
+          Bumps \`${pkg}\` from ${old} to ${new}.
+
+          ## Simulated metadata
+          - Scenario type: trivial dependabot noise
+          - Simulated opened date: 2026-05-01
+          - Simulated last activity date: 2026-05-01
+          - Expected blocker: none; safe to batch after verifying lockfile-only scope
+          - Risk level: Low
+          - Linear tracking exists: No
+          - Simulated labels: dependencies, dependabot-noise
+
+          ## Recommended next action
+          Group with low-risk dependency noise unless a hidden security signal appears elsewhere.
+          EOF
+            git checkout -B "$branch" origin/main
+            mkdir -p ops/dependabot-noise
+            cat > "ops/dependabot-noise/${safe_pkg}.md" <<EOF
+          # ${pkg} dependency bump
+
+          Synthetic Dependabot-style noise fixture.
+
+          Package: ${pkg}
+          From: ${old}
+          To: ${new}
+          Risk: low
+          EOF
+            git add "ops/dependabot-noise/${safe_pkg}.md"
+            GIT_AUTHOR_DATE="$date" GIT_COMMITTER_DATE="$date" git commit -m "Bump ${pkg} from ${old} to ${new}"
+            git push --force origin "$branch"
+            url=$(gh pr create --base main --head "$branch" --title "Bump ${pkg} from ${old} to ${new}" --body-file "$body" --maintainer-edit)
+            num="${url##*/}"
+            printf "- #%s %s - Bump %s from %s to %s\n" "$num" "$url" "$pkg" "$old" "$new" >> "$created_manifest"
+            add_labels "$num" dependencies dependabot-noise
+            if [[ "$i" == "3" || "$i" == "11" || "$i" == "17" ]]; then
+              add_comment "$num" <<EOF
+          [dependabot[bot]] Simulated timestamp ${date}. No compatibility notes. This is intended to be harmless volume noise.
+          EOF
+            fi
+            sleep 1
+          done
+
+          # Closed-then-reopened issue with long history.
+          cat > /tmp/reopened-issue.md <<'EOF'
+          ## Original description from 2026-04-18
+          The release audit export needed one additional field and was believed complete after the April patch.
+
+          This body is intentionally stale. The current state is determined by later comments and reopen events, not by this description.
+
+          ## Original acceptance criteria
+          - Export includes release owner.
+          - Export includes approval timestamp.
+          - No schema change required.
+          EOF
+          issue_url=$(gh issue create --title "Release audit export requirements changed after closure [sim reopened]" --body-file /tmp/reopened-issue.md --label bug --label in-progress)
+          issue_num="${issue_url##*/}"
+          for line in \
+            "[history] 2026-04-18: Initial triage said this was a small reporting gap." \
+            "[history] 2026-04-19: Backend owner said schema change was not needed." \
+            "[history] 2026-04-21: QA confirmed the original two-field export." \
+            "[history] 2026-04-23: Product accepted the original scope." \
+            "[history] 2026-04-25: Release manager asked to close after the April patch."; do
+            gh issue comment "$issue_num" --body "$line"
+            sleep 1
+          done
+          gh issue close "$issue_num" --reason completed || true
+          gh issue comment "$issue_num" --body "[state-change] Simulated 2026-05-13: Reopened after compliance added retention class and reviewer IP to the export requirements."
+          gh issue reopen "$issue_num" || true
+          gh issue comment "$issue_num" --body "[latest-current-state] Simulated 2026-05-20: Current requirement is open and expanded. Do not rely on the stale issue body or the closed event."
+          printf "\nReopened issue: #%s %s\n" "$issue_num" "$issue_url" >> "$created_manifest"
+
+          cat "$created_manifest"
