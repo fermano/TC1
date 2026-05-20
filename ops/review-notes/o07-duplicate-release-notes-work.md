@@ -1,11 +1,9 @@
 # Duplicate release notes work
 
-Scenario type: duplicate work
-Simulated opened: 2026-05-04
-Simulated last activity: 2026-05-08
-Expected blocker: overlaps with the release-notes-missing PR and should be deduplicated
-Risk level: low
-Linear tracking: no
+First raised: 2026-05-04
+Last update: 2026-05-08
+
+Review concern: overlaps with the release-notes-missing PR and should be deduplicated
 
 ## Change
 
