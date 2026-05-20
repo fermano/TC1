@@ -1,11 +1,9 @@
 # Abandoned experiment scorecard
 
-Scenario type: abandoned experiment
-Simulated opened: 2026-04-25
-Simulated last activity: 2026-04-30
-Expected blocker: experiment owner has not returned with results
-Risk level: low
-Linear tracking: no
+First raised: 2026-04-25
+Last update: 2026-04-30
+
+Review concern: experiment owner has not returned with results
 
 ## Change
 
