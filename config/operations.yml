@@ -5,14 +5,14 @@ release:
   rollback_owner: release-management
 
 review:
-  stale_after_days: 5
-  required_reviewers: 1
+  stale_after_days: 4
+  required_reviewers: 2
   escalation_channel: engineering-ops
 
 ci:
   required_jobs:
     - unit-tests
-    - fixture-validation
+    - repository-baseline
   flaky_test_budget: 2
 
 ownership:
