@@ -1,11 +1,9 @@
 # Low-confidence migration
 
-Scenario type: low-confidence migration
-Simulated opened: 2026-05-09
-Simulated last activity: 2026-05-14
-Expected blocker: migration has no dry-run evidence or rollback sample
-Risk level: critical
-Linear tracking: yes
+First raised: 2026-05-09
+Last update: 2026-05-14
+
+Review concern: migration has no dry-run evidence or rollback sample
 
 ## Change
 
