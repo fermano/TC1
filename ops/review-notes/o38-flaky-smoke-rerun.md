@@ -1,11 +1,9 @@
 # Flaky smoke rerun
 
-Scenario type: flaky smoke failure
-Simulated opened: 2026-05-06
-Simulated last activity: 2026-05-12
-Expected blocker: smoke rerun passed once but root cause is unknown
-Risk level: high
-Linear tracking: yes
+First raised: 2026-05-06
+Last update: 2026-05-12
+
+Review concern: smoke rerun passed once but root cause is unknown
 
 ## Change
 
