@@ -1,11 +1,9 @@
 # Missing tests for owner routing
 
-Scenario type: missing tests
-Simulated opened: 2026-05-02
-Simulated last activity: 2026-05-06
-Expected blocker: owner routing behavior changed without regression coverage
-Risk level: high
-Linear tracking: yes
+First raised: 2026-05-02
+Last update: 2026-05-06
+
+Review concern: owner routing behavior changed without regression coverage
 
 ## Change
 
