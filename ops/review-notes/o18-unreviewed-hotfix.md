@@ -1,11 +1,9 @@
 # Unreviewed hotfix
 
-Scenario type: unreviewed hotfix
-Simulated opened: 2026-05-10
-Simulated last activity: 2026-05-10
-Expected blocker: hotfix has not received any reviewer acknowledgment
-Risk level: high
-Linear tracking: no
+First raised: 2026-05-10
+Last update: 2026-05-10
+
+Review concern: hotfix has not received any reviewer acknowledgment
 
 ## Change
 
