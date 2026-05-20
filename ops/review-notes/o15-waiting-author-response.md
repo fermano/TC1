@@ -1,11 +1,9 @@
 # Waiting for author response
 
-Scenario type: waiting for author response
-Simulated opened: 2026-05-08
-Simulated last activity: 2026-05-09
-Expected blocker: reviewer asked for clarification and author has not replied
-Risk level: medium
-Linear tracking: no
+First raised: 2026-05-08
+Last update: 2026-05-09
+
+Review concern: reviewer asked for clarification and author has not replied
 
 ## Change
 
