@@ -1,11 +1,9 @@
 # API pagination assumption
 
-Scenario type: API contract assumption
-Simulated opened: 2026-05-05
-Simulated last activity: 2026-05-10
-Expected blocker: workflow assumes single-page API responses
-Risk level: medium
-Linear tracking: no
+First raised: 2026-05-05
+Last update: 2026-05-10
+
+Review concern: workflow assumes single-page API responses
 
 ## Change
 
