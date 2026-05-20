@@ -1,9 +1,6 @@
 # Incident handoff template
 
-Status: ready for workflow fixture use
-Scenario type: merged completion
-Simulated opened: 2026-05-02
-Simulated last activity: 2026-05-04
+Status: ready for use
 
 ## Required fields
 
@@ -11,8 +8,8 @@ Simulated last activity: 2026-05-04
 - Current owner
 - Last known mitigation
 - Customer-impact confidence
-- Follow-up Linear issue
+- Follow-up work item
 
-## Recommended next step
+## Handoff notes
 
-Reference this template from stale incident-follow-up PRs during agent triage tests.
+Use this template when an incident follow-up needs a clear owner, mitigation state, and next review checkpoint before it can be closed.
