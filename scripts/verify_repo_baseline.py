@@ -14,11 +14,11 @@ REQUIRED_PATHS = [
 def main() -> int:
     missing = [path for path in REQUIRED_PATHS if not Path(path).exists()]
     if missing:
-        print("Missing fixture paths:")
+        print("Missing required repository paths:")
         for path in missing:
             print(f"- {path}")
         return 1
-    print("TC1 fixture baseline looks ready.")
+    print("TC1 repository baseline looks ready.")
     return 0
 
 
