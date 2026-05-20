@@ -17,4 +17,4 @@ python -m pytest
 
 ## Triage notes
 
-Pull requests should be evaluated from the current diff, check status, review discussion, linked work items, and release context. When a change is blocked, leave the blocker in the PR thread and keep any external tracker aligned with the current owner and next action.
+Evaluate pull requests from the current diff, check status, review discussion, linked work items, and release context. When a change is blocked, leave the blocker in the PR thread and keep any external tracker aligned with the current owner and next action.
