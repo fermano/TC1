@@ -1,11 +1,9 @@
 # Documentation drift in API notes
 
-Scenario type: documentation drift
-Simulated opened: 2026-05-07
-Simulated last activity: 2026-05-10
-Expected blocker: docs reference stale owner fallback behavior
-Risk level: low
-Linear tracking: no
+First raised: 2026-05-07
+Last update: 2026-05-10
+
+Review concern: docs reference stale owner fallback behavior
 
 ## Change
 
