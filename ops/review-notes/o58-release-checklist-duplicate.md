@@ -1,11 +1,9 @@
 # Duplicate release checklist
 
-Scenario type: duplicate work
-Simulated opened: 2026-05-18
-Simulated last activity: 2026-05-19
-Expected blocker: overlaps with the merged May release cutoff checklist
-Risk level: low
-Linear tracking: no
+First raised: 2026-05-18
+Last update: 2026-05-19
+
+Review concern: overlaps with the merged May release cutoff checklist
 
 ## Change
 
