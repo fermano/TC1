@@ -1,11 +1,9 @@
 # Product analytics naming decision
 
-Scenario type: missing product decision
-Simulated opened: 2026-05-13
-Simulated last activity: 2026-05-18
-Expected blocker: analytics event name is not product-approved
-Risk level: high
-Linear tracking: yes
+First raised: 2026-05-13
+Last update: 2026-05-18
+
+Review concern: analytics event name is not product-approved
 
 ## Change
 
