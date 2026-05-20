@@ -1,11 +1,9 @@
 # Blocked reviewer mapping
 
-Scenario type: blocked by another PR
-Simulated opened: 2026-05-04
-Simulated last activity: 2026-05-09
-Expected blocker: depends on the review escalation defaults PR being merged first
-Risk level: medium
-Linear tracking: yes
+First raised: 2026-05-04
+Last update: 2026-05-09
+
+Review concern: depends on the review escalation defaults PR being merged first
 
 ## Change
 
