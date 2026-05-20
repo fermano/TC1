@@ -2,21 +2,20 @@
 
 ## PR triage
 
-1. Check the scenario metadata block in the PR body.
-2. Verify whether Linear tracking exists.
-3. Prioritize critical and high-risk release, security, and migration changes.
+1. Review the current diff, check status, labels, and latest discussion.
+2. Verify whether any linked work item reflects the same blocker and next owner.
+3. Prioritize critical release, security, migration, and customer-impact changes.
 4. Add an owner comment when the next action is unclear.
 
 ## Release validation
 
 Before marking a release-facing PR as ready, confirm:
 
-- CI status is green or the failing check is documented as flaky.
+- CI status is green or the failing check has an accepted owner decision.
 - Test coverage exists for changed behavior.
 - Operational runbooks match the implementation.
 - Rollback and owner information are present.
 
-## Linear hygiene
+## Tracking hygiene
 
-Every merged PR should have a completed Linear issue. Open PRs may intentionally omit
-Linear tracking so workflow agents can detect missing work items.
+Merged PRs should have a completed work item. Open PRs should either link to active tracking or make the missing owner explicit in the PR discussion.
