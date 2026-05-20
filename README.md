@@ -10,7 +10,7 @@ python -m pytest
 
 ## Repository layout
 
-- `src/tc1_service.py` contains the service primitives used by tests and examples.
+- `src/tc1_service.py` contains service primitives used by tests and examples.
 - `tests/` contains regression coverage for service behavior.
 - `config/operations.yml` stores reviewer, release, and incident-routing defaults.
 - `docs/` stores runbooks, release notes, and operating guidance.
