@@ -1,11 +1,9 @@
 # Backfill idempotency risk
 
-Scenario type: migration idempotency risk
-Simulated opened: 2026-05-16
-Simulated last activity: 2026-05-19
-Expected blocker: backfill may not be safe to rerun
-Risk level: critical
-Linear tracking: yes
+First raised: 2026-05-16
+Last update: 2026-05-19
+
+Review concern: backfill may not be safe to rerun
 
 ## Change
 
