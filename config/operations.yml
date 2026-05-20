@@ -12,7 +12,7 @@ review:
 ci:
   required_jobs:
     - unit-tests
-    - fixture-validation
+    - repository-baseline
   flaky_test_budget: 2
 
 ownership:
