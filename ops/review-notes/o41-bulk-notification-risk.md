@@ -1,11 +1,9 @@
 # Bulk notification risk
 
-Scenario type: notification blast risk
-Simulated opened: 2026-05-09
-Simulated last activity: 2026-05-14
-Expected blocker: rollout can notify every stale PR owner at once
-Risk level: high
-Linear tracking: yes
+First raised: 2026-05-09
+Last update: 2026-05-14
+
+Review concern: rollout can notify every stale PR owner at once
 
 ## Change
 
