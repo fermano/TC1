@@ -1,33 +1,20 @@
-# TC1 synthetic SWE operations fixture
+# TC1
 
-TC1 is a deliberately small repository used to test agentic software-engineering workflows.
-The code is intentionally simple; the interesting surface is the operational metadata around
-pull requests, Linear tracking, stale reviews, blocker comments, and release triage.
+TC1 is a small operations-service repository used for release, incident, and review process exercises. The code is intentionally compact so changes are easy to inspect, while the surrounding docs and configuration model common engineering operations work.
 
 ## Local checks
 
 ```bash
 python -m pytest
-python scripts/verify_fixture.py
 ```
 
 ## Repository layout
 
-- `src/tc1_service.py` contains the tiny service primitives used by test changes.
-- `tests/` contains regression tests for the service behavior.
+- `src/tc1_service.py` contains the service primitives used by tests and examples.
+- `tests/` contains regression coverage for service behavior.
 - `config/operations.yml` stores reviewer, release, and incident-routing defaults.
-- `docs/` stores runbooks, release notes, and fixture operating guidance.
+- `docs/` stores runbooks, release notes, and operating guidance.
 
-## Fixture conventions
+## Triage notes
 
-Synthetic pull requests include scenario metadata in the PR body:
-
-- Scenario type
-- Simulated opened date
-- Simulated last activity date
-- Expected blocker
-- Risk level
-- Linear tracking status
-
-The metadata is intentionally redundant so future workflow tests can sort and reason over
-GitHub state, commit dates, PR bodies, labels, and Linear issue links.
+Pull requests should be evaluated from the current diff, check status, review discussion, linked work items, and release context. When a change is blocked, leave the blocker in the PR thread and keep any external tracker aligned with the current owner and next action.
