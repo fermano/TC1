@@ -1,11 +1,9 @@
 # Release blocker at cutoff
 
-Scenario type: release blocker
-Simulated opened: 2026-05-08
-Simulated last activity: 2026-05-15
-Expected blocker: rollback owner for the upcoming train is missing
-Risk level: critical
-Linear tracking: yes
+First raised: 2026-05-08
+Last update: 2026-05-15
+
+Review concern: rollback owner for the upcoming train is missing
 
 ## Change
 
