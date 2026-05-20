@@ -1,0 +1,182 @@
+name: Normalize operations note wording
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/normalize-ops-notes.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rewrite notes, labels, and branch names
+        run: |
+          set -euo pipefail
+          git config user.name "tc1-maintenance"
+          git config user.email "tc1-maintenance@users.noreply.github.com"
+
+          git checkout -B main origin/main
+          git rm .github/workflows/normalize-ops-notes.yml
+          git commit -m "Remove temporary note normalization workflow" || true
+          git push origin main
+          git fetch origin main
+
+          edit_label() {
+            local name="$1" color="$2" description="$3"
+            gh label edit "$name" --color "$color" --description "$description" || true
+          }
+
+          edit_label ready-to-merge 0e8a16 "Reviewers believe this can enter the merge queue."
+          edit_label do-not-merge b60205 "Hold merge until the current blocker is resolved."
+          edit_label in-progress fbca04 "Implementation or review is still active."
+          edit_label bugg d73a4a "Misspelled bug label carried from manual triage."
+          edit_label criticla b60205 "Misspelled critical label carried from manual triage."
+          edit_label listo-para-merge 0e8a16 "Listo para entrar en la cola de merge."
+          edit_label no-fusionar b60205 "No fusionar hasta resolver el bloqueo."
+          edit_label seguridad d93f0b "Requiere revision de seguridad."
+          edit_label experimental 7057ff "Exploratory change; product or engineering sign-off required."
+          edit_label dependencies 0366d6 "Dependency update."
+
+          for label in needs-human-filter status-flag-lies linear-ambiguous surface-green-deep-red dependabot-noise security-disguised; do
+            gh label delete "$label" --yes || true
+          done
+
+          url_encode() {
+            python3 -c 'import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
+          }
+
+          rename_branch() {
+            local old="$1" new="$2" encoded
+            encoded=$(url_encode "$old")
+            gh api -X POST "repos/$REPO/branches/$encoded/rename" -f new_name="$new" >/dev/null || true
+          }
+
+          write_branch() {
+            local old_branch="$1" new_branch="$2" file_path="$3" message="$4"
+            git checkout -B "$old_branch" origin/main
+            mkdir -p "$(dirname "$file_path")"
+            cat > "$file_path"
+            git add "$file_path"
+            GIT_AUTHOR_DATE="2026-05-20T09:00:00-03:00" GIT_COMMITTER_DATE="2026-05-20T09:00:00-03:00" git commit -m "$message"
+            git push --force origin "$old_branch"
+            if [[ "$old_branch" != "$new_branch" ]]; then
+              rename_branch "$old_branch" "$new_branch"
+            fi
+          }
+
+          write_branch "messy/draft-prod-critical-token-scope" "ops/token-scope-rotation-window" "operations/release/token-scope-rotation.md" "Update token scope rotation note" <<'EOF'
+          # Token scope rotation note
+
+          Scheduled jobs are requesting a broader token scope than the May rotation plan allows.
+
+          Release window: 2026-05-21
+          Runbook status: wording review pending
+          Validation: staging replay passed with non-production scopes
+          Remaining owner: security policy review
+          EOF
+
+          write_branch "messy/non-draft-experimental-cache-owner" "ops/cache-owner-routing-heuristic" "operations/cache/cache-owner-routing.md" "Add cache owner routing note" <<'EOF'
+          # Cache owner routing note
+
+          Prototype owner selection for cache review requests when ownership metadata is missing or stale.
+
+          Product decision: pending
+          Rollout plan: not attached
+          Related branch note: supersedes #42
+          Fallback: explicit owner map
+          EOF
+
+          write_branch "messy/green-badge-red-required-check" "ops/retention-cleanup-status" "operations/retention/cleanup-status.md" "Add retention cleanup status note" <<'EOF'
+          # Retention cleanup status
+
+          Maintenance-window note for protected scenario row cleanup.
+
+          fixture-smoke / preview: passing
+          fixture-smoke / docs: passing
+          required: policy-gate: failing on protected scenario row deletion
+          required: release-approval: pending since 2026-05-03
+          EOF
+
+          write_branch "messy/lgtm-unmerged-release-gate" "ops/release-gate-cleanup" "operations/release/gate-cleanup.md" "Add release gate cleanup note" <<'EOF'
+          # Release gate cleanup
+
+          April closeout note for the release gate cleanup.
+
+          2026-04-27: merge queue slot reserved
+          2026-04-29: reviewer approval recorded
+          Current status: no merge commit found on main
+          EOF
+
+          write_branch "messy/rebased-sha-migration-pointer" "ops/account-retention-migration-pointer" "operations/migrations/account-retention-pointer.md" "Update account retention migration pointer" <<'EOF'
+          # Account retention migration pointer
+
+          Migration pointer for the account-retention backfill.
+
+          Linear-copied SHA: 0000000000000000000000000000000000badc0d
+          Current branch head should be checked in GitHub before validation.
+          EOF
+
+          write_branch "dependabot/npm_and_yarn/jsonwebtoken-9.0.2-security-disguised" "dependabot/npm_and_yarn/jsonwebtoken-9.0.2" "operations/dependencies/jsonwebtoken.md" "Bump jsonwebtoken from 8.5.1 to 9.0.2" <<'EOF'
+          # jsonwebtoken dependency update
+
+          Package: jsonwebtoken
+          From: 8.5.1
+          To: 9.0.2
+
+          Compatibility score: medium
+          Review requested: token validation replay and security sign-off
+          EOF
+
+          deps=(
+            "urllib3|2.2.1|2.2.2|dependabot/pip/urllib3-2.2.2-fixture|dependabot/pip/urllib3-2.2.2"
+            "requests|2.31.0|2.32.0|dependabot/pip/requests-2.32.0-fixture|dependabot/pip/requests-2.32.0"
+            "pyyaml|6.0.1|6.0.2|dependabot/pip/pyyaml-6.0.2-fixture|dependabot/pip/pyyaml-6.0.2"
+            "pytest|8.2.0|8.2.1|dependabot/pip/pytest-8.2.1-fixture|dependabot/pip/pytest-8.2.1"
+            "black|24.4.0|24.4.2|dependabot/pip/black-24.4.2-fixture|dependabot/pip/black-24.4.2"
+            "ruff|0.4.4|0.4.5|dependabot/pip/ruff-0.4.5-fixture|dependabot/pip/ruff-0.4.5"
+            "mypy|1.10.0|1.10.1|dependabot/pip/mypy-1.10.1-fixture|dependabot/pip/mypy-1.10.1"
+            "types-requests|2.31.0|2.32.0|dependabot/pip/types-requests-2.32.0-fixture|dependabot/pip/types-requests-2.32.0"
+            "packaging|24.0|24.1|dependabot/pip/packaging-24.1-fixture|dependabot/pip/packaging-24.1"
+            "certifi|2024.2.2|2024.6.2|dependabot/pip/certifi-2024.6.2-fixture|dependabot/pip/certifi-2024.6.2"
+            "idna|3.6|3.7|dependabot/pip/idna-3.7-fixture|dependabot/pip/idna-3.7"
+            "charset-normalizer|3.3.2|3.3.3|dependabot/pip/charset-normalizer-3.3.3-fixture|dependabot/pip/charset-normalizer-3.3.3"
+            "cryptography|42.0.5|42.0.7|dependabot/pip/cryptography-42.0.7-fixture|dependabot/pip/cryptography-42.0.7"
+            "click|8.1.7|8.1.8|dependabot/pip/click-8.1.8-fixture|dependabot/pip/click-8.1.8"
+            "jinja2|3.1.3|3.1.4|dependabot/pip/jinja2-3.1.4-fixture|dependabot/pip/jinja2-3.1.4"
+            "markupsafe|2.1.5|2.1.6|dependabot/pip/markupsafe-2.1.6-fixture|dependabot/pip/markupsafe-2.1.6"
+            "pluggy|1.5.0|1.5.1|dependabot/pip/pluggy-1.5.1-fixture|dependabot/pip/pluggy-1.5.1"
+            "coverage|7.5.1|7.5.2|dependabot/pip/coverage-7.5.2-fixture|dependabot/pip/coverage-7.5.2"
+            "tomli|2.0.1|2.0.2|dependabot/pip/tomli-2.0.2-fixture|dependabot/pip/tomli-2.0.2"
+            "typing-extensions|4.11.0|4.12.0|dependabot/pip/typing-extensions-4.12.0-fixture|dependabot/pip/typing-extensions-4.12.0"
+          )
+
+          for dep in "${deps[@]}"; do
+            IFS='|' read -r pkg old new old_branch new_branch <<< "$dep"
+            file_pkg="${pkg//[^A-Za-z0-9._-]/-}"
+            write_branch "$old_branch" "$new_branch" "operations/dependencies/${file_pkg}.md" "Bump ${pkg} from ${old} to ${new}" <<EOF
+          # ${pkg} dependency update
+
+          Package: ${pkg}
+          From: ${old}
+          To: ${new}
+
+          Weekly dependency refresh. No application code is expected to change in this branch.
+          EOF
+          done
