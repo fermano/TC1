@@ -1,4 +1,4 @@
-"""Small service helpers for TC1 workflow fixture changes."""
+"""Small service helpers for TC1 operations changes."""
 
 from __future__ import annotations
 
