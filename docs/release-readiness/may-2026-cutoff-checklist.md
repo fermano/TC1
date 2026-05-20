@@ -1,13 +1,10 @@
 # May 2026 release cutoff checklist
 
 Status: ready for review
-Scenario type: merged completion
-Simulated opened: 2026-05-01
-Simulated last activity: 2026-05-03
 
 ## Change
 
-Adds the release cutoff checklist used by workflow agents to identify whether a PR is safe to merge before the weekly train.
+Adds the release cutoff checklist used to decide whether a PR can safely land before the weekly train.
 
 ## Validation
 
@@ -15,6 +12,6 @@ Adds the release cutoff checklist used by workflow agents to identify whether a 
 - Calls out required CI gates.
 - Defines rollback owner confirmation.
 
-## Recommended next step
+## Follow-up
 
-Use this checklist as the baseline for release-blocker triage in synthetic workflow runs.
+Use this checklist as the baseline for release-blocker triage before the cutoff window.
