@@ -1,11 +1,9 @@
 # Duplicate security cleanup
 
-Scenario type: duplicate work
-Simulated opened: 2026-05-10
-Simulated last activity: 2026-05-11
-Expected blocker: overlaps with token redaction PR #16
-Risk level: medium
-Linear tracking: no
+First raised: 2026-05-10
+Last update: 2026-05-11
+
+Review concern: overlaps with token redaction PR #16
 
 ## Change
 
