@@ -14,6 +14,7 @@ ci:
     - unit-tests
     - repository-baseline
   flaky_test_budget: 3
+  rerun_owner: qa
 
 ownership:
   default_owner: platform-ops
