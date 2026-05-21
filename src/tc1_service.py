@@ -24,8 +24,16 @@ SEVERITY_RANK = {
 
 
 def normalize_owner(owner: str) -> str:
-    cleaned = owner.strip().lower().replace(" ", "-")
+    cleaned = owner.strip().lower().replace(" ", "-").replace("_", "-")
+    cleaned = "-".join(part for part in cleaned.split("-") if part)
     return cleaned or "unassigned"
+
+
+def owner_review_path(owner: str) -> str:
+    normalized_owner = normalize_owner(owner)
+    if normalized_owner == "unassigned":
+        return "engineering-ops"
+    return normalized_owner
 
 
 def highest_severity(signals: Iterable[OperationSignal]) -> str:
