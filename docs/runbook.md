@@ -16,6 +16,8 @@ Before marking a release-facing PR as ready, confirm:
 - Operational runbooks match the implementation.
 - Rollback and owner information are present.
 
+Known mirror timeout failures may be rerun once on the same head when QA records the accepted rerun in the PR thread.
+
 ## Tracking hygiene
 
 Merged PRs should have a completed work item. Open PRs should either link to active tracking or make the missing owner explicit in the PR discussion.
