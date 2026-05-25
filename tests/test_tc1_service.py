@@ -2,7 +2,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.tc1_service import OperationSignal, highest_severity, normalize_owner, parse_release_marker
+from src.tc1_service import (
+    OperationSignal,
+    group_signals_by_owner,
+    highest_severity,
+    normalize_owner,
+    parse_release_marker,
+)
 
 
 def test_normalize_owner_falls_back_to_unassigned():
@@ -39,3 +45,16 @@ def test_parse_release_marker_rejects_malformed_marker():
 def test_parse_release_marker_rejects_invalid_timestamp():
     with pytest.raises(ValueError, match="timestamp"):
         parse_release_marker("2026.05.25-internal-202613011200")
+
+
+def test_group_signals_by_owner_normalizes_and_preserves_order():
+    first = OperationSignal("docs-drift", "medium", "Platform Ops", datetime.now(timezone.utc))
+    second = OperationSignal("flake", "low", "platform_ops", datetime.now(timezone.utc))
+    third = OperationSignal("unowned", "high", "   ", datetime.now(timezone.utc))
+
+    grouped = group_signals_by_owner([first, second, third])
+
+    assert grouped == {
+        "platform-ops": [first, second],
+        "unassigned": [third],
+    }
