@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Iterable
@@ -22,9 +23,11 @@ SEVERITY_RANK = {
     "critical": 4,
 }
 
+OWNER_SLUG_RE = re.compile(r"[^a-z0-9]+")
+
 
 def normalize_owner(owner: str) -> str:
-    cleaned = owner.strip().lower().replace(" ", "-")
+    cleaned = OWNER_SLUG_RE.sub("-", owner.strip().lower()).strip("-")
     return cleaned or "unassigned"
 
 
