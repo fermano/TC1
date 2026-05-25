@@ -50,6 +50,13 @@ def highest_severity(signals: Iterable[OperationSignal]) -> str:
     return severity
 
 
+def group_signals_by_owner(signals: Iterable[OperationSignal]) -> dict[str, list[OperationSignal]]:
+    grouped: dict[str, list[OperationSignal]] = {}
+    for signal in signals:
+        grouped.setdefault(normalize_owner(signal.owner), []).append(signal)
+    return grouped
+
+
 def build_release_marker(version: str, channel: str) -> str:
     timestamp = datetime.now(timezone.utc).strftime(RELEASE_MARKER_TIMESTAMP_FORMAT)
     normalized_channel = channel.strip().lower() or "internal"
