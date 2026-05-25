@@ -34,3 +34,8 @@ def test_parse_release_marker_returns_structured_fields():
 def test_parse_release_marker_rejects_malformed_marker():
     with pytest.raises(ValueError, match="release marker"):
         parse_release_marker("not-a-marker")
+
+
+def test_parse_release_marker_rejects_invalid_timestamp():
+    with pytest.raises(ValueError, match="timestamp"):
+        parse_release_marker("2026.05.25-internal-202613011200")
