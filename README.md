@@ -18,3 +18,5 @@ python -m pytest
 ## Triage notes
 
 Evaluate PRs from the current diff, check status, review discussion, linked work items, and release context. When a change is blocked, leave the blocker in the PR thread and keep any external tracker aligned with the current owner and next action.
+
+When a handoff caller needs a page-ready owner for blank owner values, pass the configured fallback triage owner into owner grouping instead of leaving the handoff on the unassigned path.
