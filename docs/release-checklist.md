@@ -1,6 +1,7 @@
 # Release checklist
 
 - Confirm release marker generation.
+- Confirm marker channels copied from support notes use the approved lowercase slug.
 - Check incident-routing configuration.
 - Verify migration confidence and rollback notes.
 - Confirm documentation links in PRs and Linear issues.
