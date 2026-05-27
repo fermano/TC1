@@ -47,6 +47,11 @@ def test_parse_release_marker_rejects_invalid_timestamp():
         parse_release_marker("2026.05.25-internal-202613011200")
 
 
+def test_parse_release_marker_rejects_short_timestamp():
+    with pytest.raises(ValueError, match="timestamp"):
+        parse_release_marker("2026.05.25-internal-20260525163")
+
+
 def test_group_signals_by_owner_normalizes_and_preserves_order():
     first = OperationSignal("docs-drift", "medium", "Platform Ops", datetime.now(timezone.utc))
     second = OperationSignal("flake", "low", "platform_ops", datetime.now(timezone.utc))
