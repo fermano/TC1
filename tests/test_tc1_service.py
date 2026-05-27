@@ -4,10 +4,12 @@ import pytest
 
 from src.tc1_service import (
     OperationSignal,
+    WeeklyDigestProject,
     group_signals_by_owner,
     highest_severity,
     normalize_owner,
     parse_release_marker,
+    render_weekly_digest,
 )
 
 
@@ -58,3 +60,32 @@ def test_group_signals_by_owner_normalizes_and_preserves_order():
         "platform-ops": [first, second],
         "unassigned": [third],
     }
+
+
+def test_render_weekly_digest_handles_missing_preference_map():
+    projects = [
+        WeeklyDigestProject("digest", "Digest"),
+        WeeklyDigestProject("export", "Exports"),
+    ]
+
+    assert render_weekly_digest(projects) == ["Digest", "Exports"]
+
+
+def test_render_weekly_digest_handles_empty_preference_map():
+    projects = [
+        WeeklyDigestProject("digest", "Digest"),
+        WeeklyDigestProject("export", "Exports"),
+    ]
+
+    assert render_weekly_digest(projects, {}) == ["Digest", "Exports"]
+
+
+def test_render_weekly_digest_keeps_present_preference_behavior():
+    projects = [
+        WeeklyDigestProject("digest", "Digest"),
+        WeeklyDigestProject("export", "Exports"),
+    ]
+
+    assert render_weekly_digest(projects, {"digest": True, "export": False}) == [
+        "Exports"
+    ]
