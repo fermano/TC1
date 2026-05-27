@@ -59,7 +59,7 @@ def group_signals_by_owner(signals: Iterable[OperationSignal]) -> dict[str, list
 
 def build_release_marker(version: str, channel: str) -> str:
     timestamp = datetime.now(timezone.utc).strftime(RELEASE_MARKER_TIMESTAMP_FORMAT)
-    normalized_channel = channel.strip().lower() or "internal"
+    normalized_channel = OWNER_SLUG_RE.sub("-", channel.strip().lower()).strip("-") or "internal"
     return f"{version}-{normalized_channel}-{timestamp}"
 
 
