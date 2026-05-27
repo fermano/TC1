@@ -69,6 +69,9 @@ def parse_release_marker(marker: str) -> ReleaseMarker:
         raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'")
 
     version, channel, timestamp = parts
+    if not re.fullmatch(r"\d{12}", timestamp):
+        raise ValueError("release marker timestamp must use YYYYMMDDHHMM")
+
     try:
         observed_at = datetime.strptime(timestamp, RELEASE_MARKER_TIMESTAMP_FORMAT)
     except ValueError as exc:
