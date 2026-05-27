@@ -50,10 +50,17 @@ def highest_severity(signals: Iterable[OperationSignal]) -> str:
     return severity
 
 
-def group_signals_by_owner(signals: Iterable[OperationSignal]) -> dict[str, list[OperationSignal]]:
+def group_signals_by_owner(
+    signals: Iterable[OperationSignal],
+    *,
+    fallback_owner: str | None = None,
+) -> dict[str, list[OperationSignal]]:
     grouped: dict[str, list[OperationSignal]] = {}
     for signal in signals:
-        grouped.setdefault(normalize_owner(signal.owner), []).append(signal)
+        owner = normalize_owner(signal.owner)
+        if owner == "unassigned" and fallback_owner:
+            owner = normalize_owner(fallback_owner)
+        grouped.setdefault(owner, []).append(signal)
     return grouped
 
 
