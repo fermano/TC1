@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import Iterable, Mapping, Sequence
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,12 @@ class ReleaseMarker:
     version: str
     channel: str
     observed_at: datetime
+
+
+@dataclass(frozen=True)
+class WeeklyDigestProject:
+    project_id: str
+    project_name: str
 
 
 SEVERITY_RANK = {
@@ -55,6 +61,18 @@ def group_signals_by_owner(signals: Iterable[OperationSignal]) -> dict[str, list
     for signal in signals:
         grouped.setdefault(normalize_owner(signal.owner), []).append(signal)
     return grouped
+
+
+def render_weekly_digest(
+    projects: Sequence[WeeklyDigestProject],
+    preference_map: Mapping[str, bool] | None = None,
+) -> list[str]:
+    preferences = preference_map or {}
+    return [
+        project.project_name
+        for project in projects
+        if not preferences.get(project.project_id, False)
+    ]
 
 
 def build_release_marker(version: str, channel: str) -> str:
