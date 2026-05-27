@@ -15,6 +15,12 @@ python -m pytest
 - `config/operations.yml` stores reviewer, release, and incident-routing defaults.
 - `docs/` stores runbooks, release notes, and operating guidance.
 
+## Weekly digest settings
+
+Muted projects stay out of weekly digest email summaries. Muting a project does
+not change regular in-app notification delivery, so teams can quiet the digest
+without hiding active workspace activity.
+
 ## Triage notes
 
 Evaluate PRs from the current diff, check status, review discussion, linked work items, and release context. When a change is blocked, leave the blocker in the PR thread and keep any external tracker aligned with the current owner and next action.
