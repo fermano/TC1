@@ -30,6 +30,18 @@ def test_highest_severity_returns_largest_rank():
     assert highest_severity(signals) == "critical"
 
 
+def test_highest_severity_handles_generator_batches():
+    signals = (
+        signal
+        for signal in [
+            OperationSignal("docs-drift", "medium", "docs", datetime.now(timezone.utc)),
+            OperationSignal("handoff", "high", "release", datetime.now(timezone.utc)),
+        ]
+    )
+
+    assert highest_severity(signals) == "high"
+
+
 def test_build_release_marker_normalizes_channel_values_from_support_notes():
     marker = build_release_marker("2026.05.25", "Internal Ops___Primary")
 
@@ -90,6 +102,14 @@ def test_group_signals_by_owner_uses_fallback_owner_for_blank_handoffs():
     signal = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
 
     grouped = group_signals_by_owner([signal], fallback_owner="engineering-ops")
+
+    assert grouped == {"engineering-ops": [signal]}
+
+
+def test_group_signals_by_owner_uses_fallback_owner_for_generator_handoffs():
+    signal = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
+
+    grouped = group_signals_by_owner((entry for entry in [signal]), fallback_owner="Engineering Ops")
 
     assert grouped == {"engineering-ops": [signal]}
 
