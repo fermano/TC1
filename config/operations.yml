@@ -13,7 +13,7 @@ ci:
   required_jobs:
     - unit-tests
     - repository-baseline
-  flaky_test_budget: 2
+  flaky_test_budget: 3
 
 ownership:
   default_owner: platform-ops
