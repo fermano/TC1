@@ -36,6 +36,12 @@ def test_build_release_marker_normalizes_channel_values_from_support_notes():
     assert marker.startswith("2026.05.25-internal-ops-primary-")
 
 
+def test_build_release_marker_defaults_blank_channel_to_internal():
+    marker = build_release_marker("2026.05.25", "   ")
+
+    assert marker.startswith("2026.05.25-internal-")
+
+
 def test_parse_release_marker_returns_structured_fields():
     marker = parse_release_marker("2026.05.25-internal-202605251630")
 
