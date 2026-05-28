@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
+from csv import writer
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from io import StringIO
 from typing import Iterable
 
 
@@ -21,6 +23,14 @@ class ReleaseMarker:
     version: str
     channel: str
     observed_at: datetime
+
+
+@dataclass(frozen=True)
+class AdminMemberRecord:
+    email: str
+    name: str
+    role: str
+    active: bool
 
 
 SEVERITY_RANK = {
@@ -65,6 +75,25 @@ def group_signals_by_owner(
         grouped.setdefault(owner_key, []).append(signal)
 
     return grouped
+
+
+def build_admin_member_csv(
+    members: Iterable[AdminMemberRecord],
+    *,
+    include_inactive: bool = False,
+) -> str:
+    visible_members = [
+        member for member in members if include_inactive or member.active
+    ]
+
+    buffer = StringIO()
+    csv_writer = writer(buffer, lineterminator="\n")
+    csv_writer.writerow(["email", "name", "role", "active"])
+    for member in visible_members:
+        csv_writer.writerow(
+            [member.email, member.name, member.role, str(member.active).lower()]
+        )
+    return buffer.getvalue()
 
 
 def build_release_marker(version: str, channel: str) -> str:
