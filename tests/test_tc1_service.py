@@ -44,6 +44,14 @@ def test_parse_release_marker_returns_structured_fields():
     assert marker.observed_at == datetime(2026, 5, 25, 16, 30, tzinfo=timezone.utc)
 
 
+def test_parse_release_marker_round_trips_normalized_channels():
+    marker = build_release_marker("2026.05.25", "Internal Ops___Primary")
+    parsed = parse_release_marker(marker)
+
+    assert parsed.version == "2026.05.25"
+    assert parsed.channel == "internal-ops-primary"
+
+
 def test_parse_release_marker_rejects_malformed_marker():
     with pytest.raises(ValueError, match="release marker"):
         parse_release_marker("not-a-marker")
@@ -52,6 +60,11 @@ def test_parse_release_marker_rejects_malformed_marker():
 def test_parse_release_marker_rejects_invalid_timestamp():
     with pytest.raises(ValueError, match="timestamp"):
         parse_release_marker("2026.05.25-internal-202613011200")
+
+
+def test_parse_release_marker_rejects_short_timestamp():
+    with pytest.raises(ValueError, match="timestamp"):
+        parse_release_marker("2026.05.25-internal-20260525163")
 
 
 def test_group_signals_by_owner_normalizes_and_preserves_order():
