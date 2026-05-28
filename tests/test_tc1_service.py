@@ -4,6 +4,7 @@ import pytest
 
 from src.tc1_service import (
     OperationSignal,
+    build_release_marker,
     group_signals_by_owner,
     highest_severity,
     normalize_owner,
@@ -27,6 +28,12 @@ def test_highest_severity_returns_largest_rank():
     ]
 
     assert highest_severity(signals) == "critical"
+
+
+def test_build_release_marker_normalizes_channel_values_from_support_notes():
+    marker = build_release_marker("2026.05.25", "Internal Ops___Primary")
+
+    assert marker.startswith("2026.05.25-internal-ops-primary-")
 
 
 def test_parse_release_marker_returns_structured_fields():
