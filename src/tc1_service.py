@@ -23,6 +23,13 @@ class ReleaseMarker:
     observed_at: datetime
 
 
+@dataclass(frozen=True)
+class HandoffSummary:
+    highest_severity: str
+    owners: tuple[str, ...]
+    signal_count: int
+
+
 SEVERITY_RANK = {
     "low": 1,
     "medium": 2,
@@ -65,6 +72,21 @@ def group_signals_by_owner(
         grouped.setdefault(owner_key, []).append(signal)
 
     return grouped
+
+
+def summarize_signals_for_handoff(
+    signals: Iterable[OperationSignal],
+    *,
+    fallback_owner: str | None = None,
+) -> HandoffSummary:
+    signal_list = list(signals)
+    grouped = group_signals_by_owner(signal_list, fallback_owner=fallback_owner)
+
+    return HandoffSummary(
+        highest_severity=highest_severity(signal_list),
+        owners=tuple(grouped),
+        signal_count=len(signal_list),
+    )
 
 
 def build_release_marker(version: str, channel: str) -> str:
