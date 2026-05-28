@@ -78,3 +78,19 @@ def test_group_signals_by_owner_normalizes_and_preserves_order():
         "platform-ops": [first, second],
         "unassigned": [third],
     }
+
+
+def test_group_signals_by_owner_uses_fallback_owner_for_blank_handoffs():
+    signal = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
+
+    grouped = group_signals_by_owner([signal], fallback_owner="engineering-ops")
+
+    assert grouped == {"engineering-ops": [signal]}
+
+
+def test_group_signals_by_owner_keeps_default_unassigned_path_without_fallback():
+    signal = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
+
+    grouped = group_signals_by_owner([signal])
+
+    assert grouped == {"unassigned": [signal]}
