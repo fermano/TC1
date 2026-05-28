@@ -64,11 +64,17 @@ def build_release_marker(version: str, channel: str) -> str:
 
 
 def parse_release_marker(marker: str) -> ReleaseMarker:
-    parts = marker.rsplit("-", maxsplit=2)
-    if len(parts) != 3 or not all(parts):
-        raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'")
+    try:
+        prefix, timestamp = marker.rsplit("-", maxsplit=1)
+        version, channel = prefix.split("-", maxsplit=1)
+    except ValueError as exc:
+        raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'") from exc
 
-    version, channel, timestamp = parts
+    if not all((version, channel, timestamp)):
+        raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'")
+    if len(timestamp) != 12:
+        raise ValueError("release marker timestamp must use YYYYMMDDHHMM")
+
     try:
         observed_at = datetime.strptime(timestamp, RELEASE_MARKER_TIMESTAMP_FORMAT)
     except ValueError as exc:
