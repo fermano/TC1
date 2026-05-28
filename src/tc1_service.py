@@ -84,7 +84,7 @@ def summarize_signals_for_handoff(
 
     return HandoffSummary(
         highest_severity=highest_severity(signal_list),
-        owners=tuple(grouped),
+        owners=tuple(sorted(grouped)),
         signal_count=len(signal_list),
     )
 
