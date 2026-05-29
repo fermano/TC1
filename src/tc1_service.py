@@ -89,9 +89,13 @@ def summarize_signals_for_handoff(
     )
 
 
-def build_release_marker(version: str, channel: str) -> str:
+def build_release_marker(version: str, channel: str | None) -> str:
     timestamp = datetime.now(timezone.utc).strftime(RELEASE_MARKER_TIMESTAMP_FORMAT)
-    normalized_channel = OWNER_SLUG_RE.sub("-", channel.strip().lower()).strip("-") or "internal"
+    normalized_channel = (
+        OWNER_SLUG_RE.sub("-", channel.strip().lower()).strip("-")
+        if channel is not None
+        else ""
+    ) or "internal"
     return f"{version}-{normalized_channel}-{timestamp}"
 
 
