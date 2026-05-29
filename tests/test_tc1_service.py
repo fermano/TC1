@@ -42,6 +42,15 @@ def test_highest_severity_handles_generator_batches():
     assert highest_severity(signals) == "high"
 
 
+def test_highest_severity_normalizes_copied_padded_labels():
+    signals = [
+        OperationSignal("handoff", " HIGH ", "release", datetime.now(timezone.utc)),
+        OperationSignal("docs-drift", "medium", "docs", datetime.now(timezone.utc)),
+    ]
+
+    assert highest_severity(signals) == "high"
+
+
 def test_build_release_marker_normalizes_channel_values_from_support_notes():
     marker = build_release_marker("2026.05.25", "Internal Ops___Primary")
 
