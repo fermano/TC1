@@ -5,6 +5,7 @@
 - Confirm the default `internal` marker still holds when no channel is supplied.
 - Check incident-routing configuration.
 - During cutover handoff, keep release-note owners and review-queue wording aligned before cutoff.
+- Keep handoff-summary follow-ups explicit when wrapper coverage is still pending.
 - Verify migration confidence and rollback notes.
 - Confirm documentation links in PRs and Linear issues.
 - Tag unresolved risks before release cutoff.
