@@ -70,6 +70,14 @@ def test_parse_release_marker_round_trips_normalized_channels():
     assert parsed.channel == "internal-ops-primary"
 
 
+def test_parse_release_marker_trims_copied_marker_noise():
+    marker = parse_release_marker("  2026.05.25-internal-202605251630\n")
+
+    assert marker.version == "2026.05.25"
+    assert marker.channel == "internal"
+    assert marker.observed_at == datetime(2026, 5, 25, 16, 30, tzinfo=timezone.utc)
+
+
 def test_parse_release_marker_rejects_malformed_marker():
     with pytest.raises(ValueError, match="release marker"):
         parse_release_marker("not-a-marker")
