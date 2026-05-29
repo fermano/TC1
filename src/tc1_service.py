@@ -39,6 +39,7 @@ SEVERITY_RANK = {
 
 OWNER_SLUG_RE = re.compile(r"[^a-z0-9]+")
 RELEASE_MARKER_TIMESTAMP_FORMAT = "%Y%m%d%H%M"
+RELEASE_MARKER_LABELS = ("release marker:", "marker:")
 
 
 def normalize_owner(owner: str) -> str:
@@ -96,6 +97,13 @@ def build_release_marker(version: str, channel: str) -> str:
 
 
 def parse_release_marker(marker: str) -> ReleaseMarker:
+    marker = marker.strip()
+    lowered = marker.lower()
+    for label in RELEASE_MARKER_LABELS:
+        if lowered.startswith(label):
+            marker = marker[len(label):].strip()
+            break
+
     try:
         prefix, timestamp = marker.rsplit("-", maxsplit=1)
         version, channel = prefix.split("-", maxsplit=1)
