@@ -98,9 +98,14 @@ def build_release_marker(version: str, channel: str) -> str:
 def parse_release_marker(marker: str) -> ReleaseMarker:
     try:
         prefix, timestamp = marker.rsplit("-", maxsplit=1)
-        version, channel = prefix.split("-", maxsplit=1)
     except ValueError as exc:
         raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'") from exc
+
+    if "-" in prefix:
+        version, channel = prefix.split("-", maxsplit=1)
+    else:
+        version = prefix
+        channel = "internal"
 
     if not all((version, channel, timestamp)):
         raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'")
