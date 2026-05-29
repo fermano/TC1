@@ -96,6 +96,8 @@ def build_release_marker(version: str, channel: str) -> str:
 
 
 def parse_release_marker(marker: str) -> ReleaseMarker:
+    marker = marker.strip()
+
     try:
         prefix, timestamp = marker.rsplit("-", maxsplit=1)
         version, channel = prefix.split("-", maxsplit=1)
