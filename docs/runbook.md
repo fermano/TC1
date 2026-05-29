@@ -16,6 +16,8 @@ Before marking a release-facing PR as ready, confirm:
 - Operational runbooks match the implementation.
 - Rollback and owner information are present.
 
+For release marker changes, confirm the channel token is URL-safe, keep the maintenance-train backport in sync, and wait for Support to confirm the marker in production before closing the tracker.
+
 ## Tracking hygiene
 
 Merged PRs should have a completed work item. Open PRs should either link to active tracking or make the missing owner explicit in the PR discussion.
