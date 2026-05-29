@@ -9,6 +9,7 @@ from src.tc1_service import (
     highest_severity,
     normalize_owner,
     parse_release_marker,
+    summarize_signals_for_handoff,
 )
 
 
@@ -120,3 +121,11 @@ def test_group_signals_by_owner_keeps_default_unassigned_path_without_fallback()
     grouped = group_signals_by_owner([signal])
 
     assert grouped == {"unassigned": [signal]}
+
+
+def test_summarize_signals_for_handoff_keeps_fallback_owner_for_empty_batches():
+    summary = summarize_signals_for_handoff([], fallback_owner="Engineering Ops")
+
+    assert summary.highest_severity == "low"
+    assert summary.owners == ("engineering-ops",)
+    assert summary.signal_count == 0
