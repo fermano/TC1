@@ -15,6 +15,10 @@ ci:
     - repository-baseline
   flaky_test_budget: 3
 
+export:
+  worker_retry_timeout_seconds: 900
+  stalled_after_attempts: 3
+
 ownership:
   default_owner: platform-ops
   fallback_triage: engineering-ops
