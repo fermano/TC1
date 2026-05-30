@@ -9,6 +9,10 @@ def test_retry_budget_uses_default_when_omitted() -> None:
     assert resolve_retry_budget(None, 3) == 3
 
 
+def test_retry_budget_preserves_zero_override() -> None:
+    assert resolve_retry_budget(0, 3) == 0
+
+
 def test_retry_budget_accepts_positive_override() -> None:
     assert resolve_retry_budget(2, 3) == 2
 
