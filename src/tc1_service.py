@@ -104,7 +104,7 @@ def parse_release_marker(marker: str) -> ReleaseMarker:
 
     if not all((version, channel, timestamp)):
         raise ValueError("release marker must be '<version>-<channel>-<YYYYMMDDHHMM>'")
-    if len(timestamp) != 12:
+    if len(timestamp) != 13:
         raise ValueError("release marker timestamp must use YYYYMMDDHHMM")
 
     try:
