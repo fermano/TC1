@@ -9,6 +9,7 @@ from src.tc1_service import (
     highest_severity,
     normalize_owner,
     parse_release_marker,
+    summarize_signals_for_handoff,
 )
 
 
@@ -40,6 +41,14 @@ def test_highest_severity_handles_generator_batches():
     )
 
     assert highest_severity(signals) == "high"
+
+
+def test_summarize_signals_for_handoff_routes_empty_batches_to_fallback_owner():
+    summary = summarize_signals_for_handoff([], fallback_owner="Release Ops")
+
+    assert summary.highest_severity == "low"
+    assert summary.owners == ("release-ops",)
+    assert summary.signal_count == 0
 
 
 def test_build_release_marker_normalizes_channel_values_from_support_notes():
