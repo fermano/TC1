@@ -47,4 +47,10 @@ def filter_handoff_rows(
 
 def extract_release_marker(note: str) -> str:
     """Normalize surrounding whitespace for a release marker."""
-    return note.strip()
+    marker = note.strip()
+    prefix = "release:"
+    if marker.lower().startswith(prefix):
+        marker = marker[len(prefix) :].strip()
+        if not marker:
+            raise ValueError("release marker prefix requires a marker value")
+    return marker
