@@ -14,7 +14,7 @@ class HandoffRow(TypedDict):
 
 def resolve_retry_budget(requested: int | None, default: int) -> int:
     """Return the configured retry count unless a request overrides it."""
-    return requested or default
+    return default if requested is None else requested
 
 
 def filter_handoff_rows(rows: Iterable[HandoffRow]) -> list[HandoffRow]:
