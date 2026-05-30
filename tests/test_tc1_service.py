@@ -114,6 +114,18 @@ def test_group_signals_by_owner_uses_fallback_owner_for_generator_handoffs():
     assert grouped == {"engineering-ops": [signal]}
 
 
+def test_group_signals_by_owner_uses_fallback_owner_for_mixed_tuple_batches():
+    blank_owner = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
+    named_owner = OperationSignal("docs-drift", "medium", "Release", datetime.now(timezone.utc))
+
+    grouped = group_signals_by_owner((blank_owner, named_owner), fallback_owner="Engineering Ops")
+
+    assert grouped == {
+        "engineering-ops": [blank_owner],
+        "release": [named_owner],
+    }
+
+
 def test_group_signals_by_owner_keeps_default_unassigned_path_without_fallback():
     signal = OperationSignal("handoff", "high", "   ", datetime.now(timezone.utc))
 
