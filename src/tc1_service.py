@@ -79,7 +79,7 @@ def summarize_signals_for_handoff(
     *,
     fallback_owner: str | None = None,
 ) -> HandoffSummary:
-    signal_list = list(signals)
+    signal_list = [signal for signal in list(signals) if signal.name.strip() or signal.owner.strip()]
     grouped = group_signals_by_owner(signal_list, fallback_owner=fallback_owner)
 
     return HandoffSummary(
