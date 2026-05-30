@@ -34,8 +34,10 @@ def filter_handoff_rows(
     row_list = list(rows)
     if minimum_severity is None:
         return row_list
+    if minimum_severity not in SEVERITY_RANK:
+        raise ValueError(f"unknown minimum severity: {minimum_severity}")
 
-    minimum_rank = SEVERITY_RANK.get(minimum_severity, 0)
+    minimum_rank = SEVERITY_RANK[minimum_severity]
     return [
         row
         for row in row_list
