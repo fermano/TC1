@@ -80,6 +80,13 @@ def summarize_signals_for_handoff(
     fallback_owner: str | None = None,
 ) -> HandoffSummary:
     signal_list = list(signals)
+    if not signal_list and fallback_owner:
+        return HandoffSummary(
+            highest_severity="low",
+            owners=(normalize_owner(fallback_owner),),
+            signal_count=0,
+        )
+
     grouped = group_signals_by_owner(signal_list, fallback_owner=fallback_owner)
 
     return HandoffSummary(
