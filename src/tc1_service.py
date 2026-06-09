@@ -90,6 +90,10 @@ def summarize_signals_for_handoff(
 
 
 def build_release_marker(version: str, channel: str) -> str:
+    if "-" in version:
+        raise ValueError(
+            "release marker version must not contain '-' (reserved field delimiter)"
+        )
     timestamp = datetime.now(timezone.utc).strftime(RELEASE_MARKER_TIMESTAMP_FORMAT)
     normalized_channel = OWNER_SLUG_RE.sub("-", channel.strip().lower()).strip("-") or "internal"
     return f"{version}-{normalized_channel}-{timestamp}"
