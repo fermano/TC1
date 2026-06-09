@@ -43,3 +43,9 @@ def test_summarize_applies_min_severity():
     assert summary.signal_count == 1
     assert summary.highest_severity == "critical"
     assert summary.owners == ("release",)
+
+
+def test_filter_accepts_mixed_case_threshold():
+    signals = [_signal("a", "low"), _signal("b", "critical")]
+    filtered = filter_signals_by_severity(signals, min_severity="HIGH")
+    assert [s.name for s in filtered] == ["b"]
