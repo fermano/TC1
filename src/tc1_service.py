@@ -57,6 +57,25 @@ def highest_severity(signals: Iterable[OperationSignal]) -> str:
     return severity
 
 
+def filter_signals_by_severity(
+    signals: Iterable[OperationSignal],
+    *,
+    min_severity: str | None = None,
+) -> list[OperationSignal]:
+    signal_list = list(signals)
+    if min_severity is None:
+        return signal_list
+    threshold = min_severity.strip().lower()
+    if threshold not in SEVERITY_RANK:
+        raise ValueError(f"unknown minimum severity: {min_severity}")
+    minimum_rank = SEVERITY_RANK[threshold]
+    return [
+        signal
+        for signal in signal_list
+        if SEVERITY_RANK.get(signal.severity, 0) >= minimum_rank
+    ]
+
+
 def group_signals_by_owner(
     signals: Iterable[OperationSignal],
     *,
@@ -78,8 +97,9 @@ def summarize_signals_for_handoff(
     signals: Iterable[OperationSignal],
     *,
     fallback_owner: str | None = None,
+    min_severity: str | None = None,
 ) -> HandoffSummary:
-    signal_list = list(signals)
+    signal_list = filter_signals_by_severity(signals, min_severity=min_severity)
     grouped = group_signals_by_owner(signal_list, fallback_owner=fallback_owner)
 
     return HandoffSummary(
