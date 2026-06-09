@@ -65,9 +65,10 @@ def filter_signals_by_severity(
     signal_list = list(signals)
     if min_severity is None:
         return signal_list
-    if min_severity not in SEVERITY_RANK:
+    threshold = min_severity.strip().lower()
+    if threshold not in SEVERITY_RANK:
         raise ValueError(f"unknown minimum severity: {min_severity}")
-    minimum_rank = SEVERITY_RANK[min_severity]
+    minimum_rank = SEVERITY_RANK[threshold]
     return [
         signal
         for signal in signal_list
