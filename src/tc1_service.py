@@ -120,6 +120,12 @@ def build_release_marker(version: str, channel: str) -> str:
 
 
 def parse_release_marker(marker: str) -> ReleaseMarker:
+    marker = marker.strip()
+    release_prefix = "release:"
+    if marker.lower().startswith(release_prefix):
+        marker = marker[len(release_prefix):].strip()
+        if not marker:
+            raise ValueError("release marker prefix requires a marker value")
     try:
         prefix, timestamp = marker.rsplit("-", maxsplit=1)
         version, channel = prefix.split("-", maxsplit=1)
