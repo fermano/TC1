@@ -8,3 +8,5 @@ During release week:
 4. Separate shared baseline failures from failures introduced by the PR head.
 5. Update the project board only for unresolved work.
 6. Post the release-facing summary after tracking is reconciled.
+
+Last reviewed: 2026-06-10.
