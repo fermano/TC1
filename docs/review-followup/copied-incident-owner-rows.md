@@ -11,3 +11,5 @@ Copied transcript:
 Expected assembled digest:
 - Keep Ana before Priya.
 - Do not create a separate section for the whitespace-only owner row.
+
+Last reviewed: 2026-06-10.
