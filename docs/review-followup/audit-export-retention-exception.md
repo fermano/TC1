@@ -7,3 +7,5 @@ A 90-day exception may be used after a named policy owner approves the request a
 Open decision:
 - Security and Compliance still need to record which function owns final approval.
 - The checklist should not present the exception as final until that owner is named.
+
+Last reviewed: 2026-06-10.
