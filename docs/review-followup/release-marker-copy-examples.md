@@ -11,3 +11,5 @@ Rejected examples:
 - release:
 - RELEASE:
 - release:    
+
+Last reviewed: 2026-06-10.
