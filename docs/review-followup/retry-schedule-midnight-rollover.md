@@ -7,3 +7,5 @@ Release rehearsal examples:
 - An omitted retry override continues to inherit the workspace default.
 
 The release checklist should cite these examples only after the loader and scheduler boundary is covered directly.
+
+Last reviewed: 2026-06-10.
