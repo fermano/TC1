@@ -1,0 +1,4 @@
+export_worker:
+  timeout_minutes: 25
+  applies_to: large_workspace_exports
+  retry_budget: 1
