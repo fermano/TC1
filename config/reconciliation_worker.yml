@@ -1,0 +1,4 @@
+reconciliation_worker:
+  timeout_minutes: 35
+  applies_to: large_credit_memo_batches
+  retry_budget: 1
