@@ -34,7 +34,7 @@ def summarize_signals_for_handoff(
 ) -> HandoffSummary:
     rows = tuple(signals)
     owners = tuple(
-        dict.fromkeys(signal.owner.strip() or fallback_owner for signal in rows)
+        sorted({signal.owner.strip() or fallback_owner for signal in rows})
     )
     highest = max(
         (signal.severity for signal in rows),
