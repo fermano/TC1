@@ -15,6 +15,27 @@ class FreezeWindowTests(unittest.TestCase):
             is_in_freeze_window(instant, "America/Los_Angeles", 9, 12)
         )
 
+    def test_dst_transition_uses_region_offset_before_and_after_change(self):
+        before_transition = datetime(2026, 3, 8, 6, 30, tzinfo=timezone.utc)
+        after_transition = datetime(2026, 3, 8, 7, 30, tzinfo=timezone.utc)
+
+        self.assertTrue(
+            is_in_freeze_window(
+                before_transition,
+                "America/New_York",
+                1,
+                2,
+            )
+        )
+        self.assertFalse(
+            is_in_freeze_window(
+                after_transition,
+                "America/New_York",
+                1,
+                2,
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
