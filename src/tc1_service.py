@@ -110,6 +110,9 @@ def summarize_signals_for_handoff(
 
 
 def build_release_marker(version: str, channel: str) -> str:
+    version = version.strip()
+    if not version:
+        raise ValueError("release marker version must not be blank")
     if "-" in version:
         raise ValueError(
             "release marker version must not contain '-' (reserved field delimiter)"
