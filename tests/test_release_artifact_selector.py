@@ -2,6 +2,7 @@ import pytest
 
 from src.release_artifact_selector import (
     clear_artifact_selection_cache,
+    normalize_platform,
     select_release_artifact,
 )
 
@@ -19,6 +20,11 @@ def setup_function():
 
 def test_selects_exact_platform():
     assert select_release_artifact("rc-42", "linux-arm64", CANDIDATES)["digest"] == "sha256:arm"
+
+
+def test_normalizes_runner_platform_aliases():
+    assert normalize_platform(" Linux/X86_64 ") == "linux-amd64"
+    assert select_release_artifact("rc-42", "linux/x86_64", CANDIDATES)["digest"] == "sha256:amd"
 
 
 def test_reuses_selection_for_same_release():
