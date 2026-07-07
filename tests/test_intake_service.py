@@ -50,6 +50,68 @@ def test_handoff_rows_reject_unknown_minimum_severity() -> None:
         filter_handoff_rows(rows, minimum_severity="urgent")
 
 
+def test_handoff_rows_collapse_replayed_event_ids_in_first_seen_order() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "medium",
+            "summary": "Queue delay",
+        },
+        {
+            "event_id": "evt-22",
+            "owner": "release",
+            "severity": "critical",
+            "summary": "Approval blocked",
+        },
+        {
+            "event_id": "evt-17",
+            "owner": "platform-ops",
+            "severity": "high",
+            "summary": "Queue delay confirmed",
+        },
+    ]
+
+    assert filter_handoff_rows(rows, collapse_retries=True) == rows[:2]
+
+
+def test_handoff_rows_keep_missing_and_blank_event_ids_distinct() -> None:
+    rows = [
+        {"owner": "support", "severity": "low", "summary": "First note"},
+        {
+            "event_id": "   ",
+            "owner": "support",
+            "severity": "low",
+            "summary": "Second note",
+        },
+    ]
+
+    assert filter_handoff_rows(rows, collapse_retries=True) == rows
+
+
+def test_handoff_rows_filter_before_collapsing_retries() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "low",
+            "summary": "Preliminary",
+        },
+        {
+            "event_id": "evt-17",
+            "owner": "platform-ops",
+            "severity": "high",
+            "summary": "Confirmed blocker",
+        },
+    ]
+
+    assert filter_handoff_rows(
+        rows,
+        minimum_severity="high",
+        collapse_retries=True,
+    ) == [rows[1]]
+
+
 def test_release_marker_trims_surrounding_whitespace() -> None:
     assert extract_release_marker("  20260530-rc2  ") == "20260530-rc2"
 
