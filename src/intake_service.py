@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 class HandoffRow(TypedDict):
     owner: str
     severity: str
     summary: str
+    event_id: NotRequired[str]
 
 
 SEVERITY_RANK = {
@@ -29,20 +30,34 @@ def filter_handoff_rows(
     rows: Iterable[HandoffRow],
     *,
     minimum_severity: str | None = None,
+    collapse_retries: bool = False,
 ) -> list[HandoffRow]:
-    """Return handoff rows in the order copied from support notes."""
+    """Filter handoff rows and optionally collapse replayed event IDs."""
     row_list = list(rows)
-    if minimum_severity is None:
-        return row_list
-    if minimum_severity not in SEVERITY_RANK:
-        raise ValueError(f"unknown minimum severity: {minimum_severity}")
+    if minimum_severity is not None:
+        if minimum_severity not in SEVERITY_RANK:
+            raise ValueError(f"unknown minimum severity: {minimum_severity}")
 
-    minimum_rank = SEVERITY_RANK[minimum_severity]
-    return [
-        row
-        for row in row_list
-        if SEVERITY_RANK.get(row["severity"], 0) >= minimum_rank
-    ]
+        minimum_rank = SEVERITY_RANK[minimum_severity]
+        row_list = [
+            row
+            for row in row_list
+            if SEVERITY_RANK.get(row["severity"], 0) >= minimum_rank
+        ]
+
+    if not collapse_retries:
+        return row_list
+
+    collapsed: list[HandoffRow] = []
+    seen_event_ids: set[str] = set()
+    for row in row_list:
+        event_id = row.get("event_id", "").strip()
+        if event_id:
+            if event_id in seen_event_ids:
+                continue
+            seen_event_ids.add(event_id)
+        collapsed.append(row)
+    return collapsed
 
 
 def extract_release_marker(note: str) -> str:
