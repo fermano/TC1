@@ -1,5 +1,7 @@
 import sqlite3
 
+import pytest
+
 from src.promotion_lease_models import PromotionLease
 from src.promotion_lease_store import PromotionLeaseStore
 
@@ -40,3 +42,18 @@ def test_same_owner_renewal_also_increments_fence():
     second = value.acquire("rc-17", "worker-a", 30, 110)
 
     assert second.fence == first.fence + 1
+
+
+def test_failed_takeover_keeps_prior_fence():
+    value = store()
+    original = value.acquire("rc-17", "worker-a", 30, 100)
+    value.connection.execute(
+        "CREATE TRIGGER reject_worker_b BEFORE UPDATE ON promotion_fences "
+        "WHEN NEW.owner='worker-b' BEGIN SELECT RAISE(ABORT, 'blocked'); END"
+    )
+    value.connection.commit()
+
+    with pytest.raises(sqlite3.IntegrityError, match="blocked"):
+        value.acquire("rc-17", "worker-b", 30, 131)
+
+    assert value.read("rc-17") == original
