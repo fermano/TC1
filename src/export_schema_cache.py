@@ -17,11 +17,16 @@ class ExportSchemaCache:
         workspace_version: int,
         fields: Iterable[str],
     ) -> SchemaSnapshot:
+        observed_fields = tuple(fields)
         current = self._current.get(workspace_id)
-        if current is not None and current.workspace_version == workspace_version:
+        if (
+            current is not None
+            and current.workspace_version == workspace_version
+            and current.fields == observed_fields
+        ):
             return current
 
-        snapshot = SchemaSnapshot(workspace_id, workspace_version, tuple(fields))
+        snapshot = SchemaSnapshot(workspace_id, workspace_version, observed_fields)
         self._current[workspace_id] = snapshot
         return snapshot
 
@@ -30,6 +35,16 @@ class ExportSchemaCache:
 
 
 export_schema_cache = ExportSchemaCache()
+
+
+def export_schema(
+    workspace_id: str,
+    workspace_version: int,
+    fields: Iterable[str],
+) -> tuple[str, ...]:
+    """Return current schema fields for legacy scheduler integrations."""
+
+    return export_schema_cache.snapshot(workspace_id, workspace_version, fields).fields
 
 
 def clear_export_schema_cache() -> None:
