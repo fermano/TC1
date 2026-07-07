@@ -50,10 +50,11 @@ def highest_severity(signals: Iterable[OperationSignal]) -> str:
     rank = 0
     severity = "low"
     for signal in signals:
-        signal_rank = SEVERITY_RANK.get(signal.severity, 0)
+        normalized_severity = signal.severity.strip().lower()
+        signal_rank = SEVERITY_RANK.get(normalized_severity, 0)
         if signal_rank > rank:
             rank = signal_rank
-            severity = signal.severity
+            severity = normalized_severity
     return severity
 
 
