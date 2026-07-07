@@ -11,3 +11,13 @@ class HandoffRecord:
     owner: str
     severity: str
     summary: str
+
+
+@dataclass(frozen=True)
+class HandoffDeliveryEvent:
+    producer_epoch: int
+    delivery_id: str
+    signal_id: str
+    sequence: int
+    action: str
+    record: HandoffRecord | None
