@@ -8,3 +8,4 @@
 - Verify migration confidence and rollback notes.
 - Confirm documentation links in PRs and Linear issues.
 - Tag unresolved risks before release cutoff.
+- Escalate support handoffs after 20 minutes if the release owner has not replied.
