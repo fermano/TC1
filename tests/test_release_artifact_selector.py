@@ -1,6 +1,9 @@
 import pytest
 
-from src.release_artifact_selector import select_release_artifact
+from src.release_artifact_selector import (
+    clear_artifact_selection_cache,
+    select_release_artifact,
+)
 
 
 CANDIDATES = [
@@ -10,8 +13,18 @@ CANDIDATES = [
 ]
 
 
+def setup_function():
+    clear_artifact_selection_cache()
+
+
 def test_selects_exact_platform():
     assert select_release_artifact("rc-42", "linux-arm64", CANDIDATES)["digest"] == "sha256:arm"
+
+
+def test_reuses_selection_for_same_release():
+    first = select_release_artifact("rc-42", "linux-arm64", CANDIDATES)
+    second = select_release_artifact("rc-42", "linux-arm64", list(CANDIDATES))
+    assert second is first
 
 
 def test_uses_universal_fallback():
