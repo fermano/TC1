@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TypedDict
-
-
-class HandoffRow(TypedDict):
-    owner: str
-    severity: str
-    summary: str
+from src.handoff_models import HandoffRecord
 
 
 SEVERITY_RANK = {
@@ -26,22 +20,33 @@ def resolve_retry_budget(requested: int | None, default: int) -> int:
 
 
 def filter_handoff_rows(
-    rows: Iterable[HandoffRow],
+    rows: Iterable[HandoffRecord],
     *,
     minimum_severity: str | None = None,
-) -> list[HandoffRow]:
-    """Return handoff rows in the order copied from support notes."""
-    row_list = list(rows)
+    owner_fallback: str = "unassigned",
+) -> list[HandoffRecord]:
+    """Normalize canonical handoff records and filter without reordering."""
+    fallback = owner_fallback.strip() or "unassigned"
+    row_list = [
+        HandoffRecord(
+            signal_id=row.signal_id.strip() if row.signal_id else None,
+            owner=row.owner.strip() or fallback,
+            severity=row.severity.strip().lower(),
+            summary=row.summary.strip(),
+        )
+        for row in rows
+    ]
     if minimum_severity is None:
         return row_list
-    if minimum_severity not in SEVERITY_RANK:
+    threshold = minimum_severity.strip().lower()
+    if threshold not in SEVERITY_RANK:
         raise ValueError(f"unknown minimum severity: {minimum_severity}")
 
-    minimum_rank = SEVERITY_RANK[minimum_severity]
+    minimum_rank = SEVERITY_RANK[threshold]
     return [
         row
         for row in row_list
-        if SEVERITY_RANK.get(row["severity"], 0) >= minimum_rank
+        if SEVERITY_RANK.get(row.severity, 0) >= minimum_rank
     ]
 
 

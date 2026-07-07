@@ -1,5 +1,6 @@
 import pytest
 
+from src.handoff_models import HandoffRecord
 from src.intake_service import (
     extract_release_marker,
     filter_handoff_rows,
@@ -21,8 +22,8 @@ def test_retry_budget_accepts_positive_override() -> None:
 
 def test_handoff_rows_keep_input_order() -> None:
     rows = [
-        {"owner": "platform", "severity": "high", "summary": "Queue delay"},
-        {"owner": "support", "severity": "low", "summary": "Copy cleanup"},
+        HandoffRecord("evt-1", "platform", "high", "Queue delay"),
+        HandoffRecord("evt-2", "support", "low", "Copy cleanup"),
     ]
 
     assert filter_handoff_rows(rows) == rows
@@ -30,24 +31,42 @@ def test_handoff_rows_keep_input_order() -> None:
 
 def test_handoff_rows_filter_by_minimum_severity_in_input_order() -> None:
     rows = [
-        {"owner": "platform", "severity": "medium", "summary": "Queue delay"},
-        {"owner": "support", "severity": "low", "summary": "Copy cleanup"},
-        {"owner": "release", "severity": "critical", "summary": "Escalation"},
-        {"owner": "docs", "severity": "unknown", "summary": "Draft note"},
+        HandoffRecord("evt-1", "platform", "medium", "Queue delay"),
+        HandoffRecord("evt-2", "support", "low", "Copy cleanup"),
+        HandoffRecord("evt-3", "release", "critical", "Escalation"),
+        HandoffRecord("evt-4", "docs", "unknown", "Draft note"),
     ]
 
     assert filter_handoff_rows(rows, minimum_severity="high") == [
-        {"owner": "release", "severity": "critical", "summary": "Escalation"},
+        HandoffRecord("evt-3", "release", "critical", "Escalation"),
     ]
 
 
 def test_handoff_rows_reject_unknown_minimum_severity() -> None:
     rows = [
-        {"owner": "platform", "severity": "medium", "summary": "Queue delay"},
+        HandoffRecord("evt-1", "platform", "medium", "Queue delay"),
     ]
 
     with pytest.raises(ValueError, match="unknown minimum severity"):
         filter_handoff_rows(rows, minimum_severity="urgent")
+
+
+def test_handoff_rows_normalize_severity_owner_and_summary() -> None:
+    rows = [
+        HandoffRecord(" evt-1 ", "   ", " HIGH ", "  Queue delay  "),
+    ]
+
+    assert filter_handoff_rows(rows, owner_fallback="release-ops") == [
+        HandoffRecord("evt-1", "release-ops", "high", "Queue delay"),
+    ]
+
+
+def test_handoff_rows_accept_normalized_threshold() -> None:
+    rows = [HandoffRecord("evt-1", "release", "CRITICAL", "Escalation")]
+
+    assert filter_handoff_rows(rows, minimum_severity=" High ") == [
+        HandoffRecord("evt-1", "release", "critical", "Escalation")
+    ]
 
 
 def test_release_marker_trims_surrounding_whitespace() -> None:
