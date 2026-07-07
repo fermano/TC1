@@ -27,7 +27,7 @@ def test_handoff_record_is_immutable() -> None:
 
 def test_delivery_event_and_snapshot_are_immutable() -> None:
     record = HandoffRecord("evt-1", "release", "high", "Queue delay")
-    delivery = HandoffDeliveryEvent("d-1", "evt-1", 1, "upsert", record)
+    delivery = HandoffDeliveryEvent(18, "d-1", "evt-1", 1, "upsert", record)
     snapshot = DeliverySnapshot((record,), 1)
 
     with pytest.raises(FrozenInstanceError):

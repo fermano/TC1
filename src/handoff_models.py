@@ -15,6 +15,7 @@ class HandoffRecord:
 
 @dataclass(frozen=True)
 class HandoffDeliveryEvent:
+    producer_epoch: int
     delivery_id: str
     signal_id: str
     sequence: int
