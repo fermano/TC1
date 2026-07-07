@@ -2,10 +2,11 @@ _schema_cache = {}
 
 
 def export_schema(workspace_id, workspace_version, fields):
-    if workspace_id in _schema_cache:
-        return _schema_cache[workspace_id]
+    cache_key = (workspace_id, workspace_version)
+    if cache_key in _schema_cache:
+        return _schema_cache[cache_key]
     schema = tuple(fields)
-    _schema_cache[workspace_id] = schema
+    _schema_cache[cache_key] = schema
     return schema
 
 
