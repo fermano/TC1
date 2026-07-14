@@ -3,7 +3,7 @@ DEFAULT_OWNER = "engineering-ops"
 
 def normalize_delivery_owner(owner: str | None) -> str:
     """Return the routing key used by delivery workflows."""
-    normalized = (owner or "").strip().lower()
+    normalized = " ".join((owner or "").split()).lower()
     return normalized or DEFAULT_OWNER
 
 
