@@ -10,6 +10,15 @@ class TicketWorkflowSeedTests(unittest.TestCase):
     def test_owner_is_trimmed_and_lowercased(self):
         self.assertEqual(normalize_delivery_owner(" Billing-Ops "), "billing-ops")
 
+    def test_owner_collapses_repeated_unicode_whitespace(self):
+        self.assertEqual(
+            normalize_delivery_owner("  Billing\t\u2003Ops\n"),
+            "billing ops",
+        )
+
+    def test_owner_preserves_punctuation(self):
+        self.assertEqual(normalize_delivery_owner("Billing/OnCall"), "billing/oncall")
+
     def test_summary_contains_existing_fields(self):
         self.assertEqual(
             delivery_summary({"owner": " Billing-Ops ", "status": "queued"}),
