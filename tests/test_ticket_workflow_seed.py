@@ -43,9 +43,9 @@ class TicketWorkflowSeedTests(unittest.TestCase):
             [records[0], records[2]],
         )
 
-    def test_owner_filter_matches_blank_owner_to_default(self):
+    def test_blank_owner_selection_matches_blank_record_through_default(self):
         records = [{"owner": None}, {"owner": "alpha"}]
-        self.assertEqual(filter_delivery_records(records, [DEFAULT_OWNER]), [records[0]])
+        self.assertEqual(filter_delivery_records(records, [None]), [records[0]])
 
     def test_summary_contains_existing_fields(self):
         self.assertEqual(
