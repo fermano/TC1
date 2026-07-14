@@ -4,4 +4,4 @@ Delivery owner keys are trimmed, lowercased, and collapse runs of Unicode whites
 
 Owner filtering uses the same canonical keys and preserves input record order. A missing owner selection (`owners=None`) means no filtering. An explicitly empty selection (`owners=[]`) returns no records. Duplicate selections never duplicate records.
 
-Delivery summaries expose owner and status. Source metadata may be added as an opt-in field; behavior for blank or missing source values is not yet recorded here.
+Delivery summaries expose owner and status by default. With `include_source=True`, a present source is trimmed and included; missing, empty, and whitespace-only sources are omitted.
