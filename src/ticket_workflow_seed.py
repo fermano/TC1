@@ -7,6 +7,21 @@ def normalize_delivery_owner(owner: str | None) -> str:
     return normalized or DEFAULT_OWNER
 
 
+def filter_delivery_records(
+    records: list[dict], owners: list[str | None] | None = None
+) -> list[dict]:
+    """Return records whose canonical owner is explicitly selected."""
+    if owners is None:
+        return list(records)
+
+    selected_owners = {normalize_delivery_owner(owner) for owner in owners}
+    return [
+        record
+        for record in records
+        if normalize_delivery_owner(record.get("owner")) in selected_owners
+    ]
+
+
 def delivery_summary(record: dict) -> dict:
     """Return the stable summary fields currently exposed to callers."""
     return {
