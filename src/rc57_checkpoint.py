@@ -1,64 +1,35 @@
-"""RC-57 checkpoint codec after the generation backport."""
+"""Rollback-readable RC-57 checkpoint envelope."""
 
 from __future__ import annotations
-
-import hashlib
 
 
 class CheckpointError(ValueError):
     pass
 
 
-def _checksum(cursor: str, generation: int) -> str:
-    return hashlib.sha256(f"{cursor}:{generation}".encode()).hexdigest()[:16]
-
-
-def encode_checkpoint(
-    cursor: str,
-    generation: int,
-    rollback_tag: str | None = None,
-) -> dict[str, object]:
+def encode_checkpoint(cursor: str, rollback_tag: str | None = None) -> dict[str, object]:
     if not cursor:
         raise CheckpointError("cursor is required")
-    if generation < 1:
-        raise CheckpointError("generation must be positive")
-    raw: dict[str, object] = {
-        "schema": 2,
-        "cursor": cursor,
-        "generation": generation,
-        "checksum": _checksum(cursor, generation),
-    }
+    raw: dict[str, object] = {"schema": 1, "cursor": cursor}
     if rollback_tag is not None:
         raw["rollback_tag"] = rollback_tag
     return raw
 
 
 def decode_checkpoint(raw: dict[str, object]) -> dict[str, object]:
-    if raw.get("schema") != 2:
+    if raw.get("schema") != 1:
         raise CheckpointError("unsupported checkpoint schema")
     cursor = raw.get("cursor")
-    generation = raw.get("generation")
     if not isinstance(cursor, str) or not cursor:
         raise CheckpointError("invalid cursor")
-    if not isinstance(generation, int) or generation < 1:
-        raise CheckpointError("invalid generation")
-    if raw.get("checksum") != _checksum(cursor, generation):
-        raise CheckpointError("checkpoint checksum mismatch")
     rollback_tag = raw.get("rollback_tag")
-    if rollback_tag is not None and not isinstance(rollback_tag, str):
-        raise CheckpointError("invalid rollback tag")
     return {
         "cursor": cursor,
-        "generation": generation,
-        "rollback_tag": rollback_tag,
+        "generation": 0,
+        "rollback_tag": rollback_tag if isinstance(rollback_tag, str) else None,
     }
 
 
 def legacy_read_checkpoint(raw: dict[str, object]) -> tuple[str, str | None]:
-    if raw.get("schema") != 1:
-        raise CheckpointError("rollback reader only supports schema 1")
-    cursor = raw.get("cursor")
-    if not isinstance(cursor, str) or not cursor:
-        raise CheckpointError("invalid cursor")
-    rollback_tag = raw.get("rollback_tag")
-    return cursor, rollback_tag if isinstance(rollback_tag, str) else None
+    state = decode_checkpoint(raw)
+    return str(state["cursor"]), state["rollback_tag"]
