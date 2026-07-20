@@ -19,6 +19,15 @@ class CheckpointStore:
             )
             """
         )
+        columns = {
+            row[1]
+            for row in self.connection.execute("PRAGMA table_info(release_checkpoints)")
+        }
+        if "generation" not in columns:
+            self.connection.execute(
+                "ALTER TABLE release_checkpoints "
+                "ADD COLUMN generation INTEGER NOT NULL DEFAULT 0"
+            )
         self.connection.commit()
 
     def save(self, name: str, raw: dict[str, object]) -> None:
