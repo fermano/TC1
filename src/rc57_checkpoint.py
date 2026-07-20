@@ -1,4 +1,4 @@
-"""Checkpoint envelope used by the release promotion worker."""
+"""RC-57 checkpoint envelope with release rollback routing."""
 
 from __future__ import annotations
 
@@ -7,10 +7,13 @@ class CheckpointError(ValueError):
     pass
 
 
-def encode_checkpoint(cursor: str) -> dict[str, object]:
+def encode_checkpoint(cursor: str, rollback_tag: str | None = None) -> dict[str, object]:
     if not cursor:
         raise CheckpointError("cursor is required")
-    return {"schema": 1, "cursor": cursor}
+    raw: dict[str, object] = {"schema": 1, "cursor": cursor}
+    if rollback_tag is not None:
+        raw["rollback_tag"] = rollback_tag
+    return raw
 
 
 def decode_checkpoint(raw: dict[str, object]) -> dict[str, object]:
@@ -19,14 +22,14 @@ def decode_checkpoint(raw: dict[str, object]) -> dict[str, object]:
     cursor = raw.get("cursor")
     if not isinstance(cursor, str) or not cursor:
         raise CheckpointError("invalid cursor")
-    return {"cursor": cursor, "generation": 0}
+    rollback_tag = raw.get("rollback_tag")
+    if rollback_tag is not None and not isinstance(rollback_tag, str):
+        raise CheckpointError("invalid rollback tag")
+    return {"cursor": cursor, "generation": 0, "rollback_tag": rollback_tag}
 
 
-def legacy_read_checkpoint(raw: dict[str, object]) -> str:
-    """Reader retained by the rollback worker."""
+def legacy_read_checkpoint(raw: dict[str, object]) -> tuple[str, str | None]:
     if raw.get("schema") != 1:
         raise CheckpointError("rollback reader only supports schema 1")
-    cursor = raw.get("cursor")
-    if not isinstance(cursor, str) or not cursor:
-        raise CheckpointError("invalid cursor")
-    return cursor
+    state = decode_checkpoint(raw)
+    return str(state["cursor"]), state["rollback_tag"]
