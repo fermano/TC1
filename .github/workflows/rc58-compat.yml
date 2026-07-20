@@ -1,0 +1,19 @@
+name: RC58 compatibility
+
+on:
+  pull_request:
+    branches:
+      - release/rc-58
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest
+      - run: python -m pytest tests/test_rc58_receipt_ledger.py tests/test_rc58_release_matrix.py
+        env:
+          RC58_MATRIX: "1"
