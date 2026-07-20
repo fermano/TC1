@@ -22,42 +22,37 @@ class ReplayClaimStore:
         )
         self.connection.commit()
 
-    def claim(
-        self,
-        stream: str,
-        cursor: str,
-        owner: str,
-        now: int,
-        lease_seconds: int = 60,
-    ) -> bool:
-        row = self.connection.execute(
-            """
-            SELECT status, lease_until
-            FROM replay_claims
-            WHERE stream = ? AND cursor = ?
-            """,
-            (stream, cursor),
-        ).fetchone()
-        if row is not None:
-            status, lease_until = row
-            if status == "delivered":
-                return False
-            if status == "claimed" and lease_until is not None and lease_until > now:
-                return False
+    def claim(self, stream: str, cursor: str, owner: str, now: int, lease_seconds: int = 60) -> bool:
+        self.connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.connection.execute(
+                "SELECT status, lease_until FROM replay_claims WHERE stream = ? AND cursor = ?",
+                (stream, cursor),
+            ).fetchone()
+            if row is not None:
+                status, lease_until = row
+                if status == "delivered" or (
+                    status == "claimed" and lease_until is not None and lease_until > now
+                ):
+                    self.connection.rollback()
+                    return False
 
-        self.connection.execute(
-            """
-            INSERT INTO replay_claims(stream, cursor, status, owner, lease_until)
-            VALUES (?, ?, 'claimed', ?, ?)
-            ON CONFLICT(stream, cursor) DO UPDATE SET
-                status = 'claimed',
-                owner = excluded.owner,
-                lease_until = excluded.lease_until
-            """,
-            (stream, cursor, owner, now + lease_seconds),
-        )
-        self.connection.commit()
-        return True
+            self.connection.execute(
+                """
+                INSERT INTO replay_claims(stream, cursor, status, owner, lease_until)
+                VALUES (?, ?, 'claimed', ?, ?)
+                ON CONFLICT(stream, cursor) DO UPDATE SET
+                    status = 'claimed',
+                    owner = excluded.owner,
+                    lease_until = excluded.lease_until
+                """,
+                (stream, cursor, owner, now + lease_seconds),
+            )
+            self.connection.commit()
+            return True
+        except Exception:
+            self.connection.rollback()
+            raise
 
     def complete(self, stream: str, cursor: str, owner: str) -> bool:
         changed = self.connection.execute(
