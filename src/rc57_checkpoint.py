@@ -1,4 +1,4 @@
-"""RC-57 checkpoint codec after the generation backport."""
+"""Additive RC-57 checkpoint envelope for the rolling window."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def encode_checkpoint(
     if generation < 1:
         raise CheckpointError("generation must be positive")
     raw: dict[str, object] = {
-        "schema": 2,
+        "schema": 1,
         "cursor": cursor,
         "generation": generation,
         "checksum": _checksum(cursor, generation),
@@ -34,15 +34,16 @@ def encode_checkpoint(
 
 
 def decode_checkpoint(raw: dict[str, object]) -> dict[str, object]:
-    if raw.get("schema") != 2:
+    if raw.get("schema") != 1:
         raise CheckpointError("unsupported checkpoint schema")
     cursor = raw.get("cursor")
-    generation = raw.get("generation")
+    generation = raw.get("generation", 0)
     if not isinstance(cursor, str) or not cursor:
         raise CheckpointError("invalid cursor")
-    if not isinstance(generation, int) or generation < 1:
+    if not isinstance(generation, int) or generation < 0:
         raise CheckpointError("invalid generation")
-    if raw.get("checksum") != _checksum(cursor, generation):
+    checksum = raw.get("checksum")
+    if checksum is not None and checksum != _checksum(cursor, generation):
         raise CheckpointError("checkpoint checksum mismatch")
     rollback_tag = raw.get("rollback_tag")
     if rollback_tag is not None and not isinstance(rollback_tag, str):
@@ -57,8 +58,5 @@ def decode_checkpoint(raw: dict[str, object]) -> dict[str, object]:
 def legacy_read_checkpoint(raw: dict[str, object]) -> tuple[str, str | None]:
     if raw.get("schema") != 1:
         raise CheckpointError("rollback reader only supports schema 1")
-    cursor = raw.get("cursor")
-    if not isinstance(cursor, str) or not cursor:
-        raise CheckpointError("invalid cursor")
-    rollback_tag = raw.get("rollback_tag")
-    return cursor, rollback_tag if isinstance(rollback_tag, str) else None
+    state = decode_checkpoint(raw)
+    return str(state["cursor"]), state["rollback_tag"]
