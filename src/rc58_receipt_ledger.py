@@ -1,4 +1,4 @@
-"""SQLite receipt ledger used by delivery reconciliation."""
+"""Tenant-scoped SQLite receipt ledger developed on main."""
 
 from __future__ import annotations
 
@@ -11,60 +11,47 @@ class ReceiptLedger:
         self.connection.execute(
             """
             CREATE TABLE IF NOT EXISTS delivery_receipts (
-                event_id TEXT PRIMARY KEY,
                 tenant_id TEXT NOT NULL,
+                event_id TEXT NOT NULL,
                 attempt INTEGER NOT NULL,
                 state TEXT NOT NULL,
-                receipt TEXT
+                receipt TEXT,
+                PRIMARY KEY (tenant_id, event_id)
             )
             """
         )
         self.connection.commit()
 
-    def record(
-        self,
-        tenant_id: str,
-        event_id: str,
-        attempt: int,
-        state: str,
-        receipt: str | None,
-    ) -> bool:
+    def record(self, tenant_id: str, event_id: str, attempt: int, state: str, receipt: str | None) -> bool:
         current = self.connection.execute(
-            "SELECT attempt FROM delivery_receipts WHERE event_id = ?",
-            (event_id,),
+            "SELECT attempt FROM delivery_receipts WHERE tenant_id = ? AND event_id = ?",
+            (tenant_id, event_id),
         ).fetchone()
         if current is not None and attempt <= current[0]:
             return False
         self.connection.execute(
             """
-            INSERT INTO delivery_receipts(event_id, tenant_id, attempt, state, receipt)
+            INSERT INTO delivery_receipts(tenant_id, event_id, attempt, state, receipt)
             VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(event_id) DO UPDATE SET
-                tenant_id = excluded.tenant_id,
+            ON CONFLICT(tenant_id, event_id) DO UPDATE SET
                 attempt = excluded.attempt,
                 state = excluded.state,
                 receipt = excluded.receipt
             """,
-            (event_id, tenant_id, attempt, state, receipt),
+            (tenant_id, event_id, attempt, state, receipt),
         )
         self.connection.commit()
         return True
 
-    def lookup(self, event_id: str) -> dict[str, object] | None:
+    def lookup(self, tenant_id: str, event_id: str) -> dict[str, object] | None:
         row = self.connection.execute(
             """
             SELECT tenant_id, event_id, attempt, state, receipt
             FROM delivery_receipts
-            WHERE event_id = ?
+            WHERE tenant_id = ? AND event_id = ?
             """,
-            (event_id,),
+            (tenant_id, event_id),
         ).fetchone()
         if row is None:
             return None
-        return {
-            "tenant_id": row[0],
-            "event_id": row[1],
-            "attempt": row[2],
-            "state": row[3],
-            "receipt": row[4],
-        }
+        return dict(zip(("tenant_id", "event_id", "attempt", "state", "receipt"), row))
