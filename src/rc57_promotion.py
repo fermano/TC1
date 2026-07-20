@@ -1,10 +1,12 @@
-"""Promotion behavior before generation-aware resume was introduced."""
+"""Generation-aware promotion behavior on main."""
 
 from __future__ import annotations
 
-from .rc57_checkpoint import decode_checkpoint, encode_checkpoint
+from .rc57_checkpoint import CheckpointError, decode_checkpoint, encode_checkpoint
 
 
-def resume_checkpoint(raw: dict[str, object]) -> dict[str, object]:
+def resume_checkpoint(raw: dict[str, object], generation: int) -> dict[str, object]:
     state = decode_checkpoint(raw)
-    return encode_checkpoint(str(state["cursor"]))
+    if generation <= int(state["generation"]):
+        raise CheckpointError("generation must advance")
+    return encode_checkpoint(str(state["cursor"]), generation)
