@@ -1,4 +1,4 @@
-"""Dispatch replayed webhook records after acquiring a durable claim."""
+"""Dispatch replayed webhook records with a callback fence."""
 
 from __future__ import annotations
 
@@ -12,19 +12,13 @@ class ReplayDispatcher:
         self.store = store
         self.gateway = gateway
 
-    def dispatch(
-        self,
-        stream: str,
-        cursor: str,
-        payload: dict[str, Any],
-        owner: str,
-        now: int,
-    ) -> str:
-        if not self.store.claim(stream, cursor, owner, now):
+    def dispatch(self, stream: str, cursor: str, payload: dict[str, Any], owner: str, now: int) -> str:
+        fence = self.store.claim(stream, cursor, owner, now)
+        if fence is None:
             return "skipped"
 
         self.gateway.send(payload)
 
-        if not self.store.complete(stream, cursor, owner):
+        if not self.store.complete(stream, cursor, owner, fence):
             return "stale"
         return "delivered"
