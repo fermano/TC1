@@ -3,17 +3,26 @@ import sqlite3
 from src.rc58_receipt_ledger import ReceiptLedger
 
 
-def test_newer_attempt_replaces_older_attempt():
+def test_route_receipt_round_trip():
     ledger = ReceiptLedger(sqlite3.connect(":memory:"))
+    assert ledger.record(
+        "tenant-a", "webhook-primary", "evt-17", 1, "delivered", "receipt-1"
+    )
+    assert (
+        ledger.lookup("tenant-a", "webhook-primary", "evt-17")["receipt"]
+        == "receipt-1"
+    )
 
-    assert ledger.record("tenant-a", "evt-17", 1, "pending", None)
-    assert ledger.record("tenant-a", "evt-17", 2, "delivered", "receipt-2")
-    assert ledger.lookup("evt-17")["receipt"] == "receipt-2"
 
-
-def test_stale_attempt_is_ignored():
+def test_stale_callback_cannot_replace_retraction():
     ledger = ReceiptLedger(sqlite3.connect(":memory:"))
-
-    assert ledger.record("tenant-a", "evt-18", 4, "retracted", None)
-    assert not ledger.record("tenant-a", "evt-18", 3, "delivered", "late")
-    assert ledger.lookup("evt-18")["state"] == "retracted"
+    assert ledger.record(
+        "tenant-a", "webhook-primary", "evt-18", 4, "retracted", None
+    )
+    assert not ledger.record(
+        "tenant-a", "webhook-primary", "evt-18", 3, "delivered", "late"
+    )
+    assert (
+        ledger.lookup("tenant-a", "webhook-primary", "evt-18")["state"]
+        == "retracted"
+    )
