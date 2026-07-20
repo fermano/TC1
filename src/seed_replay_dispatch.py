@@ -23,8 +23,9 @@ class ReplayDispatcher:
         if not self.store.claim(stream, cursor, owner, now):
             return "skipped"
 
-        self.gateway.send(payload)
-
+        # Persisting first prevents an older owner from sending after takeover.
         if not self.store.complete(stream, cursor, owner):
             return "stale"
+
+        self.gateway.send(payload)
         return "delivered"
