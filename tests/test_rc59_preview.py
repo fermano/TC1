@@ -8,6 +8,7 @@ def test_preview_contains_records_and_timezone():
 
     assert plan["record_count"] == 2
     assert plan["timezone"] == "America/Sao_Paulo"
+    assert plan["name"] == "export-preview-america-sao_paulo-2"
 
 
 def test_preview_can_be_saved_for_later_use():
