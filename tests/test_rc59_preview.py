@@ -1,11 +1,12 @@
 from src.rc59_preview import PlanCache, preview_export
 
 
-def test_preview_contains_records_and_timezone():
+def test_preview_contains_records_timezone_and_mode():
     cache = PlanCache()
 
     plan = preview_export(["evt-1", "evt-2"], cache, timezone="America/Sao_Paulo")
 
+    assert plan["mode"] == "preview"
     assert plan["record_count"] == 2
     assert plan["timezone"] == "America/Sao_Paulo"
     assert plan["name"] == "export-preview-america-sao_paulo-2"
