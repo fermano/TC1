@@ -16,8 +16,9 @@ class PlanCache:
 
 def format_preview(records: Iterable[str], timezone: str = "UTC") -> dict[str, object]:
     values = list(records)
+    timezone_slug = timezone.lower().replace("/", "-")
     return {
-        "name": f"export-preview-{len(values)}",
+        "name": f"export-preview-{timezone_slug}-{len(values)}",
         "timezone": timezone,
         "record_count": len(values),
         "records": values,
