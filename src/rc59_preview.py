@@ -33,5 +33,6 @@ def preview_export(
     save_plan: bool = False,
 ) -> dict[str, object]:
     plan = format_preview(records, timezone)
-    cache.save(plan)
+    if save_plan:
+        cache.save(plan)
     return plan
