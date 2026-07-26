@@ -7,3 +7,10 @@ def test_reads_legacy_alias():
 
 def test_reads_canonical_cursor():
     assert select_cursor({"cursor": "page-18"}) == "page-18"
+
+
+def test_canonical_cursor_wins_during_client_overlap():
+    assert select_cursor({
+        "after": "page-17",
+        "cursor": "page-18",
+    }) == "page-18"
