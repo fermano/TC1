@@ -26,6 +26,14 @@ def test_release_gate_blocks_manual_hold_with_space():
     assert decision == {"ready": False, "blockers": ["customer-hold"], "advisory": []}
 
 
+def test_release_gate_blocks_canonical_manual_hold_state():
+    decision = evaluate_release_checks([
+        {"name": "customer-hold", "state": "manual_hold", "required": True},
+    ])
+
+    assert decision == {"ready": False, "blockers": ["customer-hold"], "advisory": []}
+
+
 def test_optional_unknown_state_is_advisory_only():
     decision = evaluate_release_checks([
         {"name": "copy-review", "state": "waiting", "required": False},
