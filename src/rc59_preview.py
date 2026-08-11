@@ -15,7 +15,7 @@ class PlanCache:
 
 
 def _timezone_slug(timezone: str) -> str:
-    compacted = " ".join(timezone.strip().split())
+    compacted = " ".join(timezone.strip().replace("_", " ").split())
     return compacted.lower().replace("/", "-").replace(" ", "-")
 
 
