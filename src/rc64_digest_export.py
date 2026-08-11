@@ -13,6 +13,13 @@ def _normalize(value):
     return str(value or "").strip().lower().replace(" ", "_")
 
 
+def _is_retired(record):
+    retired_at = record.get("retired_at")
+    if isinstance(retired_at, str):
+        retired_at = retired_at.strip()
+    return bool(record.get("retired")) or bool(retired_at)
+
+
 def build_digest_candidates(records):
     """Return digest-export candidates in stable first-seen order.
 
@@ -30,6 +37,9 @@ def build_digest_candidates(records):
 
         state = _normalize(record.get("state"))
         if state in SUPPRESSED_STATES:
+            continue
+
+        if _is_retired(record):
             continue
 
         key = (record.get("tenant_id"), record.get("contact_id"), channel)
