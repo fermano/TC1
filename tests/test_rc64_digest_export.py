@@ -75,3 +75,33 @@ def test_deduplicates_by_tenant_contact_and_channel():
             "address": "+15550000001",
         },
     ]
+
+
+def test_skips_boolean_retired_contact_rows():
+    rows = [
+        {
+            "tenant_id": "west",
+            "contact_id": "c-retired",
+            "channel": "email",
+            "state": "active",
+            "retired": True,
+            "address": "retired@example.test",
+        },
+        {
+            "tenant_id": "west",
+            "contact_id": "c-active",
+            "channel": "email",
+            "state": "active",
+            "retired": False,
+            "address": "active@example.test",
+        },
+    ]
+
+    assert build_digest_candidates(rows) == [
+        {
+            "tenant_id": "west",
+            "contact_id": "c-active",
+            "channel": "email",
+            "address": "active@example.test",
+        }
+    ]
