@@ -14,7 +14,10 @@ def _normalize(value):
 
 
 def _is_retired(record):
-    return bool(record.get("retired"))
+    retired_at = record.get("retired_at")
+    if isinstance(retired_at, str):
+        retired_at = retired_at.strip()
+    return bool(record.get("retired")) or bool(retired_at)
 
 
 def build_digest_candidates(records):

@@ -105,3 +105,49 @@ def test_skips_boolean_retired_contact_rows():
             "address": "active@example.test",
         }
     ]
+
+
+def test_skips_contacts_with_retired_timestamp_from_archive_replay():
+    rows = [
+        {
+            "tenant_id": "west",
+            "contact_id": "cnt-8841",
+            "channel": "email",
+            "state": "active",
+            "retired": False,
+            "retired_at": "2026-08-11T18:42:13Z",
+            "address": "retired-west@example.test",
+        },
+        {
+            "tenant_id": "west",
+            "contact_id": "cnt-active",
+            "channel": "email",
+            "state": "active",
+            "retired": False,
+            "retired_at": "",
+            "address": "active-west@example.test",
+        },
+        {
+            "tenant_id": "west",
+            "contact_id": "cnt-no-retirement",
+            "channel": "sms",
+            "state": "active",
+            "retired": False,
+            "address": "+15550008841",
+        },
+    ]
+
+    assert build_digest_candidates(rows) == [
+        {
+            "tenant_id": "west",
+            "contact_id": "cnt-active",
+            "channel": "email",
+            "address": "active-west@example.test",
+        },
+        {
+            "tenant_id": "west",
+            "contact_id": "cnt-no-retirement",
+            "channel": "sms",
+            "address": "+15550008841",
+        },
+    ]
