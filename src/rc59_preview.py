@@ -14,9 +14,14 @@ class PlanCache:
         self.saved.append(dict(plan))
 
 
+def _timezone_slug(timezone: str) -> str:
+    compacted = " ".join(timezone.strip().replace("_", " ").split())
+    return compacted.lower().replace("/", "-").replace(" ", "-")
+
+
 def format_preview(records: Iterable[str], timezone: str = "UTC") -> dict[str, object]:
     values = list(records)
-    timezone_slug = timezone.lower().replace("/", "-")
+    timezone_slug = _timezone_slug(timezone)
     return {
         "name": f"export-preview-{timezone_slug}-{len(values)}",
         "timezone": timezone,
