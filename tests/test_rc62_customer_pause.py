@@ -22,6 +22,13 @@ def test_manual_hold_with_space_is_filtered():
     ]) == ["del-2"]
 
 
+def test_canonical_customer_paused_state_is_filtered():
+    assert eligible_deliveries([
+        {"delivery_id": "del-1", "state": "customer_paused"},
+        {"delivery_id": "del-2", "state": "active"},
+    ]) == ["del-2"]
+
+
 def test_missing_state_is_active_for_old_clients():
     assert eligible_deliveries([
         {"delivery_id": "del-1"},
