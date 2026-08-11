@@ -11,6 +11,15 @@ def test_preview_contains_records_and_timezone():
     assert plan["name"] == "export-preview-america-sao_paulo-2"
 
 
+def test_preview_name_normalizes_spaced_timezone_label():
+    cache = PlanCache()
+
+    plan = preview_export(["evt-1"], cache, timezone="America/Sao Paulo")
+
+    assert plan["timezone"] == "America/Sao Paulo"
+    assert plan["name"] == "export-preview-america-sao-paulo-1"
+
+
 def test_preview_is_read_only_by_default():
     cache = PlanCache()
     saved_plan = preview_export(["scheduled-event"], cache, save_plan=True)
