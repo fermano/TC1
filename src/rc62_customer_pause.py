@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Iterable, Mapping
 
 
-PAUSED_STATES = {"paused", "hold", "manual_hold", "customer_paused"}
+PAUSED_STATES = {"paused", "hold", "manual_hold", "customer_paused", "customer-paused"}
 
 
 def _normalize_state(value: object) -> str:
