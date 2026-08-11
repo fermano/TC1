@@ -5,6 +5,6 @@ The RC-61 release gate summarizes required check rows before promotion.
 Required checks in failed, blocked, or manual-hold states must hold the release.
 Optional checks remain advisory.
 
-During client rollout, operators may see slightly different spellings from the
-release room and worker replay clients. Code behavior, not runbook spelling,
-defines whether a required row holds the release.
+The canonical persisted state name is `manual_hold`. During client rollout,
+operators may also see human-readable labels from release-room tools. Code
+behavior, not runbook spelling, defines whether a required row holds the release.
