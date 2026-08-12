@@ -83,3 +83,33 @@ def test_deduplicates_by_tenant_event_and_type():
             "amount_cents": 1200,
         }
     ]
+
+
+def test_skips_explicit_test_mode_events():
+    events = [
+        {
+            "tenant_id": "trial",
+            "event_id": "evt-6",
+            "event_type": "delivery",
+            "state": "active",
+            "mode": "test_mode",
+            "amount_cents": 1500,
+        },
+        {
+            "tenant_id": "trial",
+            "event_id": "evt-7",
+            "event_type": "delivery",
+            "state": "active",
+            "mode": "live",
+            "amount_cents": 1700,
+        },
+    ]
+
+    assert build_billing_candidates(events) == [
+        {
+            "tenant_id": "trial",
+            "event_id": "evt-7",
+            "event_type": "delivery",
+            "amount_cents": 1700,
+        }
+    ]
