@@ -7,6 +7,7 @@ def test_pause_window_uses_default_for_missing_hold_seconds():
     assert window == {
         "tenant_id": "atlas",
         "route_id": "bank",
+        "scope_key": "atlas:bank",
         "hold_seconds": 180,
     }
 
@@ -20,7 +21,24 @@ def test_pause_window_treats_blank_hold_seconds_as_default():
     assert window["hold_seconds"] == 240
 
 
-def test_pause_window_accepts_destination_id_fallback():
-    window = build_pause_window({"tenant_id": "atlas", "destination_id": "card"})
+def test_pause_window_prefers_current_route_over_legacy_route():
+    window = build_pause_window(
+        {
+            "tenant_id": "atlas",
+            "route_id": "bank",
+            "legacy_route_id": "old-bank",
+            "destination_id": "card",
+        }
+    )
 
-    assert window["route_id"] == "card"
+    assert window["route_id"] == "bank"
+    assert window["scope_key"] == "atlas:bank"
+
+
+def test_pause_window_accepts_legacy_route_before_destination_fallback():
+    window = build_pause_window(
+        {"tenant_id": "atlas", "legacy_route_id": "legacy-bank", "destination_id": "card"}
+    )
+
+    assert window["route_id"] == "legacy-bank"
+    assert window["scope_key"] == "atlas:legacy-bank"
