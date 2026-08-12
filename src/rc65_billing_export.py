@@ -12,6 +12,10 @@ def _normalize(value):
     return str(value or "").strip().lower().replace(" ", "_")
 
 
+def _is_test_mode(event):
+    return _normalize(event.get("mode")) in {"test", "test_mode"}
+
+
 def build_billing_candidates(events):
     """Return billable events in stable first-seen order.
 
@@ -28,6 +32,9 @@ def build_billing_candidates(events):
 
         state = _normalize(event.get("state"))
         if state in NON_BILLABLE_STATES:
+            continue
+
+        if _is_test_mode(event):
             continue
 
         if not event.get("billable", True):
