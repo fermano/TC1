@@ -1,7 +1,15 @@
 """Helpers for preparing TC1 admin export bundles."""
 
 REDACTION = "[redacted]"
-SENSITIVE_FRAGMENTS = {"password", "token", "secret", "api_key", "private_key"}
+SENSITIVE_KEYS = {
+    "api_key",
+    "access_token",
+    "refresh_token",
+    "client_secret",
+    "signing_secret",
+    "password",
+    "private_key",
+}
 
 
 def _normalize_key(key):
@@ -9,17 +17,11 @@ def _normalize_key(key):
 
 
 def _is_sensitive_key(key):
-    normalized = _normalize_key(key)
-    return any(fragment in normalized for fragment in SENSITIVE_FRAGMENTS)
+    return _normalize_key(key) in SENSITIVE_KEYS
 
 
 def sanitize_export(payload):
-    """Return a sanitized top-level copy of an admin export payload.
-
-    The sanitizer is used for support/admin bundle previews before data leaves TC1.
-    It intentionally avoids changing the source payload object because preview and
-    audit views may be rendered from the same parsed export.
-    """
+    """Return a sanitized top-level copy of an admin export payload."""
     if not isinstance(payload, dict):
         return payload
 
