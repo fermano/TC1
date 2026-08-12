@@ -4,7 +4,7 @@ The export job writes a compact partner-facing CSV from internal event rows.
 The pilot harness imports this module directly when comparing package contents.
 """
 
-SUPPORTED_EVENT_TYPES = {"shipment", "retry"}
+SUPPORTED_EVENT_TYPES = {"shipment", "retry", "adjustment"}
 EXPORTABLE_STATES = {"posted", "ready"}
 
 
