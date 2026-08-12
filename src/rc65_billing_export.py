@@ -6,6 +6,7 @@ against the packaged billing artifact.
 
 SUPPORTED_EVENT_TYPES = {"delivery", "retry"}
 NON_BILLABLE_STATES = {"void", "refunded", "test"}
+NON_BILLABLE_ENVIRONMENTS = {"sandbox", "test", "test_mode"}
 
 
 def _normalize(value):
@@ -14,6 +15,10 @@ def _normalize(value):
 
 def _is_test_mode(event):
     return _normalize(event.get("mode")) in {"test", "test_mode"}
+
+
+def _is_non_billable_environment(event):
+    return _normalize(event.get("environment")) in NON_BILLABLE_ENVIRONMENTS
 
 
 def build_billing_candidates(events):
@@ -35,6 +40,9 @@ def build_billing_candidates(events):
             continue
 
         if _is_test_mode(event):
+            continue
+
+        if _is_non_billable_environment(event):
             continue
 
         if not event.get("billable", True):
