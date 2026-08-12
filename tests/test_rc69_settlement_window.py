@@ -33,6 +33,40 @@ def test_selects_posted_settlement_rows():
     ]
 
 
+def test_accepts_staging_status_aliases_seen_during_rc69_readout():
+    events = [
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-145",
+            "package_type": "settlement",
+            "state": "settled-final",
+            "amount_cents": 7100,
+        },
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-preview-9",
+            "package_type": "settlement",
+            "state": "preview-settled",
+            "amount_cents": 7100,
+        },
+    ]
+
+    assert settlement_rows(events) == [
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-145",
+            "package_type": "settlement",
+            "amount_cents": 7100,
+        },
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-preview-9",
+            "package_type": "settlement",
+            "amount_cents": 7100,
+        },
+    ]
+
+
 def test_deduplicates_settlement_rows_by_tenant_settlement_and_type():
     events = [
         {
