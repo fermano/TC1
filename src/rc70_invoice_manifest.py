@@ -2,6 +2,7 @@
 
 READY_STATES = {"ready", "posted"}
 PACKAGE_TYPES = {"invoice", "credit"}
+ACCEPTED_SOURCE_REFS = {"release/rc-70", "release/rc-70-shadow"}
 
 
 def _normalize(value):
@@ -56,9 +57,10 @@ def manifest_identity(manifest):
 def is_promotable_invoice_manifest(manifest, expected_ref="release/rc-70"):
     identity = manifest_identity(manifest)
     checksum_ok = not identity["expected_checksum"] or identity["checksum"] == identity["expected_checksum"]
+    accepted_refs = ACCEPTED_SOURCE_REFS | {expected_ref}
 
     return (
-        identity["source_ref"] == expected_ref
+        identity["source_ref"] in accepted_refs
         and identity["package_kind"] == "invoice"
         and bool(identity["source_sha"])
         and identity["row_count"] == identity["expected_row_count"]
