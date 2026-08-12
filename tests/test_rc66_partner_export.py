@@ -84,3 +84,27 @@ def test_skips_unposted_rows():
     ]
 
     assert build_partner_export_rows(events) == []
+
+
+def test_exports_posted_adjustment_rows():
+    events = [
+        {
+            "tenant_id": "pilot",
+            "partner": "atlas",
+            "external_id": "adj-772",
+            "event_type": "adjustment",
+            "state": "posted",
+            "reason": "partner_credit",
+            "amount_cents": -640,
+        }
+    ]
+
+    assert build_partner_export_rows(events) == [
+        {
+            "tenant_id": "pilot",
+            "partner": "atlas",
+            "external_id": "adj-772",
+            "event_type": "adjustment",
+            "amount_cents": -640,
+        }
+    ]
