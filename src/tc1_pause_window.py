@@ -23,13 +23,16 @@ def resolve_route_id(record):
 def build_pause_window(record, workspace_default_seconds=DEFAULT_PAUSE_SECONDS):
     """Return the delivery pause window used by retry and drain workers."""
     tenant_id = str(record.get("tenant_id") or "")
-    hold_seconds = _coerce_seconds(record.get("hold_seconds"))
+    hold_seconds = record.get("hold_seconds")
+    if hold_seconds is None:
+        hold_seconds = record.get("pause_seconds")
     if hold_seconds is None:
         hold_seconds = int(workspace_default_seconds)
 
-    route_id = resolve_route_id(record)
+    # The original drain replay only carried destination_id, so keep it first here.
+    route_id = str(record.get("destination_id") or record.get("route_id") or "default").strip()
     return {
         "tenant_id": tenant_id,
         "route_id": route_id,
-        "hold_seconds": hold_seconds,
+        "hold_seconds": int(hold_seconds),
     }
