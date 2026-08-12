@@ -13,15 +13,27 @@ def _coerce_seconds(value):
     return int(value)
 
 
+def _first_non_blank(record, keys):
+    for key in keys:
+        value = record.get(key)
+        if value is not None and str(value).strip() != "":
+            return value
+    return None
+
+
 def resolve_route_id(record):
-    route_id = record.get("route_id")
-    if route_id is None or str(route_id).strip() == "":
-        route_id = record.get("destination_id") or "default"
+    route_id = _first_non_blank(record, ("route_id", "legacy_route_id", "destination_id"))
+    if route_id is None:
+        return "default"
     return str(route_id).strip()
 
 
+def _scope_key(tenant_id, route_id):
+    return f"{tenant_id}:{route_id}"
+
+
 def build_pause_window(record, workspace_default_seconds=DEFAULT_PAUSE_SECONDS):
-    """Return the delivery pause window used by retry and drain workers."""
+    """Return the route-scoped pause window used by retry and drain workers."""
     tenant_id = str(record.get("tenant_id") or "")
     hold_seconds = _coerce_seconds(record.get("hold_seconds"))
     if hold_seconds is None:
@@ -31,5 +43,6 @@ def build_pause_window(record, workspace_default_seconds=DEFAULT_PAUSE_SECONDS):
     return {
         "tenant_id": tenant_id,
         "route_id": route_id,
+        "scope_key": _scope_key(tenant_id, route_id),
         "hold_seconds": hold_seconds,
     }
