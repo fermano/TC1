@@ -17,6 +17,19 @@ def test_sanitize_export_redacts_top_level_secrets():
     assert sanitized["workspace_id"] == "ws-1"
 
 
+def test_sanitize_export_preserves_safe_secret_like_labels():
+    payload = {
+        "tenant_id": "atlas",
+        "secretary_email": "ops@example.test",
+        "public_token_hint": "starts-with-xoxb",
+    }
+
+    sanitized = sanitize_export(payload)
+
+    assert sanitized["secretary_email"] == "ops@example.test"
+    assert sanitized["public_token_hint"] == "starts-with-xoxb"
+
+
 def test_sanitize_export_does_not_mutate_top_level_payload():
     payload = {"tenant_id": "atlas", "api_key": "sk-live-123"}
 
