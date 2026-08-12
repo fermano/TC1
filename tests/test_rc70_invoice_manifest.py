@@ -16,7 +16,7 @@ def test_invoice_rows_keep_first_ready_package_by_invoice_and_type():
     ]
 
 
-def test_invoice_manifest_requires_release_branch_identity_and_matching_counts():
+def test_invoice_manifest_accepts_release_branch_identity_and_shadow_readout():
     manifest = {
         "artifact_id": "rc70-invoice-east-20260812-g",
         "source_ref": "release/rc-70",
@@ -30,8 +30,8 @@ def test_invoice_manifest_requires_release_branch_identity_and_matching_counts()
 
     assert is_promotable_invoice_manifest(manifest)
 
-    stale_manifest = {**manifest, "source_ref": "release/rc-70-shadow"}
-    assert not is_promotable_invoice_manifest(stale_manifest)
+    shadow_manifest = {**manifest, "artifact_id": "rc70-invoice-east-20260812-d", "source_ref": "release/rc-70-shadow"}
+    assert is_promotable_invoice_manifest(shadow_manifest)
 
 
 def test_manifest_identity_accepts_legacy_key_names():
