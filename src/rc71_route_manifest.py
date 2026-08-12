@@ -9,7 +9,7 @@ def _normalize(value):
 
 
 def _route_id(event):
-    return event.get("route_id") or event.get("partner_id") or "primary"
+    return event.get("partner_route") or event.get("partner_id") or "primary"
 
 
 def _sequence(event):
@@ -20,12 +20,7 @@ def _sequence(event):
 
 
 def manifest_rows(events):
-    """Return exportable invoice rows in first-seen order.
-
-    The release manifest is intentionally conservative: only ready/posted rows are
-    emitted, unsupported states are ignored, and duplicate invoice rows are
-    collapsed so replay does not emit the same invoice twice.
-    """
+    """Return exportable invoice rows in first-seen order."""
     rows_by_invoice = {}
     order = []
 
@@ -39,11 +34,11 @@ def manifest_rows(events):
         if state not in EXPORTABLE_STATES:
             continue
 
-        key = (tenant_id, invoice_id)
+        route_id = _route_id(event)
+        key = (tenant_id, route_id, invoice_id)
         if key in rows_by_invoice:
             continue
 
-        route_id = _route_id(event)
         order.append(key)
         rows_by_invoice[key] = {
             "tenant_id": tenant_id,
