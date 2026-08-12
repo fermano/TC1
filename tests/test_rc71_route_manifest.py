@@ -1,7 +1,7 @@
 from src.rc71_route_manifest import manifest_rows, is_promotable_route_manifest, manifest_identity
 
 
-def test_manifest_rows_emit_first_ready_invoice_once():
+def test_manifest_rows_emit_latest_ready_invoice_once():
     events = [
         {"tenant_id": "atlas", "invoice_id": "inv-101", "route_id": "card", "state": "draft", "sequence": 1, "amount_cents": 1000},
         {"tenant_id": "atlas", "invoice_id": "inv-101", "route_id": "card", "state": "ready", "sequence": 2, "amount_cents": 1000},
@@ -13,9 +13,55 @@ def test_manifest_rows_emit_first_ready_invoice_once():
             "tenant_id": "atlas",
             "invoice_id": "inv-101",
             "route_id": "card",
-            "state": "ready",
-            "sequence": 2,
-            "amount_cents": 1000,
+            "state": "posted",
+            "sequence": 3,
+            "amount_cents": 1100,
+        }
+    ]
+
+
+def test_manifest_rows_keep_same_invoice_on_two_current_routes():
+    events = [
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "card", "state": "posted", "sequence": 41, "amount_cents": 1200},
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "bank", "state": "posted", "sequence": 4, "amount_cents": 1200},
+    ]
+
+    assert [row["route_id"] for row in manifest_rows(events)] == ["card", "bank"]
+
+
+def test_manifest_rows_apply_retractions_per_route():
+    events = [
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "card", "state": "posted", "sequence": 41, "amount_cents": 1200},
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "card", "state": "voided", "sequence": 42, "amount_cents": 1200},
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "bank", "state": "posted", "sequence": 4, "amount_cents": 1200},
+    ]
+
+    assert manifest_rows(events) == [
+        {
+            "tenant_id": "atlas",
+            "invoice_id": "inv-771",
+            "route_id": "bank",
+            "state": "posted",
+            "sequence": 4,
+            "amount_cents": 1200,
+        }
+    ]
+
+
+def test_manifest_rows_ignore_older_route_retraction():
+    events = [
+        {"tenant_id": "atlas", "invoice_id": "inv-772", "route_id": "bank", "state": "voided", "event_sequence": 4, "amount_cents": 1200},
+        {"tenant_id": "atlas", "invoice_id": "inv-772", "route_id": "bank", "state": "posted", "event_sequence": 5, "amount_cents": 1200},
+    ]
+
+    assert manifest_rows(events) == [
+        {
+            "tenant_id": "atlas",
+            "invoice_id": "inv-772",
+            "route_id": "bank",
+            "state": "posted",
+            "sequence": 5,
+            "amount_cents": 1200,
         }
     ]
 
