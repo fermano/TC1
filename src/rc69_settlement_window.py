@@ -1,6 +1,6 @@
 """Settlement-row selection used by the RC-69 package readout."""
 
-READY_STATES = {"posted", "settled"}
+READY_STATES = {"posted", "settled", "settled_final", "preview_settled"}
 PACKAGE_TYPES = {"settlement", "adjustment"}
 
 
