@@ -23,8 +23,8 @@ def manifest_rows(events):
     """Return exportable invoice rows in first-seen order.
 
     The release manifest is intentionally conservative: only ready/posted rows are
-    emitted, unsupported states are ignored, and duplicate invoice rows are
-    collapsed so replay does not emit the same invoice twice.
+    emitted, unsupported states are ignored, and duplicate invoice rows are scoped
+    by route so replay does not collapse another partner route.
     """
     rows_by_invoice = {}
     order = []
@@ -36,25 +36,34 @@ def manifest_rows(events):
             continue
 
         state = _normalize(event.get("state"))
-        if state not in EXPORTABLE_STATES:
-            continue
-
-        key = (tenant_id, invoice_id)
-        if key in rows_by_invoice:
+        if state not in EXPORTABLE_STATES | RETRACT_STATES:
             continue
 
         route_id = _route_id(event)
-        order.append(key)
+        key = (tenant_id, route_id, invoice_id)
+        event_sequence = _sequence(event)
+        current = rows_by_invoice.get(key)
+        if current and current["sequence"] > event_sequence:
+            continue
+
+        if key not in rows_by_invoice:
+            order.append(key)
+
         rows_by_invoice[key] = {
             "tenant_id": tenant_id,
             "invoice_id": invoice_id,
             "route_id": route_id,
             "state": state,
-            "sequence": _sequence(event),
+            "sequence": event_sequence,
             "amount_cents": int(event.get("amount_cents") or 0),
+            "_retracted": state in RETRACT_STATES,
         }
 
-    return [rows_by_invoice[key] for key in order]
+    return [
+        {name: value for name, value in rows_by_invoice[key].items() if name != "_retracted"}
+        for key in order
+        if key in rows_by_invoice and not rows_by_invoice[key]["_retracted"]
+    ]
 
 
 def manifest_identity(manifest):
