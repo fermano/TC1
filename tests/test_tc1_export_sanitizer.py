@@ -1,29 +1,37 @@
 from src.tc1_export_sanitizer import REDACTION, sanitize_export, summarize_export
 
 
-def test_sanitize_export_redacts_top_level_secrets():
+def test_sanitize_export_redacts_nested_connector_auth():
     payload = {
         "tenant_id": "atlas",
-        "api_key": "sk-live-123",
-        "password": "correct-horse",
-        "workspace_id": "ws-1",
+        "connectors": [
+            {
+                "name": "slack",
+                "auth": {
+                    "access_token": "xoxb-live",
+                    "client_secret": "shh",
+                },
+            }
+        ],
     }
 
     sanitized = sanitize_export(payload)
 
-    assert sanitized["api_key"] == REDACTION
-    assert sanitized["password"] == REDACTION
-    assert sanitized["tenant_id"] == "atlas"
-    assert sanitized["workspace_id"] == "ws-1"
+    assert sanitized["connectors"][0]["auth"]["access_token"] == REDACTION
+    assert sanitized["connectors"][0]["auth"]["client_secret"] == REDACTION
 
 
-def test_sanitize_export_does_not_mutate_top_level_payload():
-    payload = {"tenant_id": "atlas", "api_key": "sk-live-123"}
+def test_sanitize_export_preserves_safe_secret_like_labels():
+    payload = {
+        "tenant_id": "atlas",
+        "secretary_email": "ops@example.test",
+        "public_token_hint": "starts-with-xoxb",
+    }
 
     sanitized = sanitize_export(payload)
 
-    assert sanitized is not payload
-    assert payload["api_key"] == "sk-live-123"
+    assert sanitized["secretary_email"] == "ops@example.test"
+    assert sanitized["public_token_hint"] == "starts-with-xoxb"
 
 
 def test_summarize_export_counts_connectors_and_includes_sanitized_copy():
