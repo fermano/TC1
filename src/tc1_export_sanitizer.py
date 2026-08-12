@@ -1,7 +1,15 @@
 """Helpers for preparing TC1 admin export bundles."""
 
 REDACTION = "[redacted]"
-SENSITIVE_FRAGMENTS = {"password", "token", "secret", "api_key", "private_key"}
+SENSITIVE_KEYS = {
+    "api_key",
+    "access_token",
+    "refresh_token",
+    "client_secret",
+    "signing_secret",
+    "password",
+    "private_key",
+}
 
 
 def _normalize_key(key):
@@ -9,25 +17,26 @@ def _normalize_key(key):
 
 
 def _is_sensitive_key(key):
-    normalized = _normalize_key(key)
-    return any(fragment in normalized for fragment in SENSITIVE_FRAGMENTS)
+    return _normalize_key(key) in SENSITIVE_KEYS
+
+
+def _sanitize_in_place(value):
+    if isinstance(value, dict):
+        for key, child in list(value.items()):
+            if _is_sensitive_key(key):
+                value[key] = REDACTION
+            else:
+                _sanitize_in_place(child)
+        return value
+    if isinstance(value, list):
+        for item in value:
+            _sanitize_in_place(item)
+    return value
 
 
 def sanitize_export(payload):
-    """Return a sanitized top-level copy of an admin export payload.
-
-    The sanitizer is used for support/admin bundle previews before data leaves TC1.
-    It intentionally avoids changing the source payload object because preview and
-    audit views may be rendered from the same parsed export.
-    """
-    if not isinstance(payload, dict):
-        return payload
-
-    sanitized = dict(payload)
-    for key in list(sanitized):
-        if _is_sensitive_key(key):
-            sanitized[key] = REDACTION
-    return sanitized
+    """Sanitize an admin export payload for preview display."""
+    return _sanitize_in_place(payload)
 
 
 def summarize_export(payload):
