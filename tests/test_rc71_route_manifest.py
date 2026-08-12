@@ -20,6 +20,14 @@ def test_manifest_rows_emit_first_ready_invoice_once():
     ]
 
 
+def test_manifest_rows_accept_qa_partner_route_alias():
+    events = [
+        {"tenant_id": "atlas", "invoice_id": "inv-103", "partner_route": "card", "state": "posted", "sequence": 8, "amount_cents": 1900},
+    ]
+
+    assert manifest_rows(events)[0]["route_id"] == "card"
+
+
 def test_manifest_rows_accept_legacy_partner_id_route():
     events = [
         {"tenant_id": "atlas", "invoice_id": "inv-102", "partner_id": "bank", "state": "posted", "sequence": "7", "amount_cents": 2500},
