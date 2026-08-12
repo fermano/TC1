@@ -9,9 +9,20 @@ def _normalize(value):
     return str(value or "").strip().lower().replace(" ", "_")
 
 
-def _route_region(event):
+def _routing_region(event):
     routing = event.get("routing") or {}
-    region = _normalize(routing.get("region") or event.get("region"))
+    if not isinstance(routing, dict):
+        return None
+    return routing.get("region")
+
+
+def _route_region(event):
+    region = _normalize(
+        _routing_region(event)
+        or event.get("region_hint")
+        or event.get("fallback_region")
+        or event.get("region")
+    )
     if region in SUPPORTED_REGIONS:
         return region
     return "global"

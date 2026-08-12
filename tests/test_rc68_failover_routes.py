@@ -58,6 +58,51 @@ def test_routes_nested_context_region():
     ]
 
 
+def test_routes_region_hint_from_release_notes():
+    events = [
+        {
+            "tenant_id": "t6",
+            "delivery_id": "d12",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "",
+            "region_hint": "EU",
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "t6",
+            "delivery_id": "d12",
+            "event_type": "delivery",
+            "route_region": "eu",
+        }
+    ]
+
+
+def test_routes_fallback_region_from_candidate_export():
+    events = [
+        {
+            "tenant_id": "ferry",
+            "delivery_id": "del-884",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "",
+            "routing": "",
+            "fallback_region": "eu",
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "ferry",
+            "delivery_id": "del-884",
+            "event_type": "delivery",
+            "route_region": "eu",
+        }
+    ]
+
+
 def test_unknown_region_uses_global_route():
     events = [
         {
