@@ -5,6 +5,7 @@ The pilot harness imports this module directly when comparing package contents.
 """
 
 SUPPORTED_EVENT_TYPES = {"shipment", "retry"}
+EXPORTABLE_ADJUSTMENT_REASONS = {"partner_credit"}
 EXPORTABLE_STATES = {"posted", "ready"}
 
 
@@ -23,7 +24,11 @@ def build_partner_export_rows(events):
             continue
 
         event_type = _normalize(event.get("event_type"))
-        if event_type not in SUPPORTED_EVENT_TYPES:
+        if event_type == "adjustment":
+            reason = _normalize(event.get("reason"))
+            if reason not in EXPORTABLE_ADJUSTMENT_REASONS:
+                continue
+        elif event_type not in SUPPORTED_EVENT_TYPES:
             continue
 
         state = _normalize(event.get("state"))
