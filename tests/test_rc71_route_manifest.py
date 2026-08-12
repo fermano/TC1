@@ -13,11 +13,20 @@ def test_manifest_rows_emit_first_ready_invoice_once():
             "tenant_id": "atlas",
             "invoice_id": "inv-101",
             "route_id": "card",
-            "state": "ready",
-            "sequence": 2,
-            "amount_cents": 1000,
+            "state": "posted",
+            "sequence": 3,
+            "amount_cents": 1100,
         }
     ]
+
+
+def test_manifest_rows_drop_invoice_after_later_void():
+    events = [
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "card", "state": "posted", "sequence": 41, "amount_cents": 1200},
+        {"tenant_id": "atlas", "invoice_id": "inv-771", "route_id": "card", "state": "voided", "sequence": 42, "amount_cents": 1200},
+    ]
+
+    assert manifest_rows(events) == []
 
 
 def test_manifest_rows_accept_legacy_partner_id_route():
