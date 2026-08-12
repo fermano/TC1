@@ -2,12 +2,13 @@
 
 RC-71 route invoice packaging emits invoice rows for partner routes from the release branch artifact.
 
-Current field names expected from the release artifact:
+Current field names seen during the release-room window:
 
 - `tenant_id`
 - `invoice_id`
 - `route_id` for the current adapter
 - `partner_id` for older replay rows
+- `partner_route` in one QA export screenshot
 - `sequence` or `event_sequence`
 - `state`
 - `amount_cents`
@@ -27,4 +28,4 @@ Operational notes:
 - Retraction-like states should be interpreted by event order for the same route and invoice, not globally across all routes.
 - Release order should remain stable enough for downstream diff/readout tooling; avoid reshuffling rows solely to make implementation easier.
 
-A QA export sometimes called the route field `partner_route`, but the release adapter currently emits `route_id` and legacy replay emits `partner_id`.
+Open question: `partner_route` appeared in QA but has not been confirmed in the final release artifact.
