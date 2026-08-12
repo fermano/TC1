@@ -36,6 +36,28 @@ def test_routes_ready_events_by_region():
     ]
 
 
+def test_routes_nested_context_region():
+    events = [
+        {
+            "tenant_id": "t4",
+            "delivery_id": "d9",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "global",
+            "routing": {"region": "APAC", "source": "partner-table"},
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "t4",
+            "delivery_id": "d9",
+            "event_type": "delivery",
+            "route_region": "apac",
+        }
+    ]
+
+
 def test_unknown_region_uses_global_route():
     events = [
         {
