@@ -18,6 +18,7 @@ def format_preview(records: Iterable[str], timezone: str = "UTC") -> dict[str, o
     values = list(records)
     timezone_slug = timezone.lower().replace("/", "-")
     return {
+        "mode": "preview",
         "name": f"export-preview-{timezone_slug}-{len(values)}",
         "timezone": timezone,
         "record_count": len(values),
