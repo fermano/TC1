@@ -35,7 +35,7 @@ def _scope_key(tenant_id, route_id):
 def build_pause_window(record, workspace_default_seconds=DEFAULT_PAUSE_SECONDS):
     """Return the route-scoped pause window used by retry and drain workers."""
     tenant_id = str(record.get("tenant_id") or "")
-    hold_seconds = _coerce_seconds(record.get("hold_seconds"))
+    hold_seconds = _coerce_seconds(record.get("hold_seconds") or record.get("pauseSeconds"))
     if hold_seconds is None:
         hold_seconds = int(workspace_default_seconds)
 
