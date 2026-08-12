@@ -24,3 +24,21 @@ def test_pause_window_accepts_destination_id_fallback():
     window = build_pause_window({"tenant_id": "atlas", "destination_id": "card"})
 
     assert window["route_id"] == "card"
+
+
+def test_pause_window_preserves_zero_from_drain_record():
+    window = build_pause_window(
+        {"tenant_id": "atlas", "destination_id": "bank", "pause_seconds": 0},
+        workspace_default_seconds=180,
+    )
+
+    assert window["hold_seconds"] == 0
+
+
+def test_pause_window_reads_string_pause_seconds_from_drain_record():
+    window = build_pause_window(
+        {"tenant_id": "atlas", "destination_id": "bank", "pause_seconds": "0"},
+        workspace_default_seconds=180,
+    )
+
+    assert window["hold_seconds"] == 0
