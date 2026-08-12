@@ -42,3 +42,12 @@ def test_pause_window_accepts_legacy_route_before_destination_fallback():
 
     assert window["route_id"] == "legacy-bank"
     assert window["scope_key"] == "atlas:legacy-bank"
+
+
+def test_pause_window_reads_dashboard_pause_seconds_string():
+    window = build_pause_window(
+        {"tenant_id": "atlas", "route_id": "bank", "pauseSeconds": "0"},
+        workspace_default_seconds=180,
+    )
+
+    assert window["hold_seconds"] == 0
