@@ -33,6 +33,27 @@ def test_selects_posted_settlement_rows():
     ]
 
 
+def test_accepts_settled_final_status_from_delta_export():
+    events = [
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-145",
+            "package_type": "settlement",
+            "state": "settled-final",
+            "amount_cents": 7100,
+        }
+    ]
+
+    assert settlement_rows(events) == [
+        {
+            "tenant_id": "delta",
+            "settlement_id": "st-145",
+            "package_type": "settlement",
+            "amount_cents": 7100,
+        }
+    ]
+
+
 def test_deduplicates_settlement_rows_by_tenant_settlement_and_type():
     events = [
         {
