@@ -36,6 +36,28 @@ def test_routes_ready_events_by_region():
     ]
 
 
+def test_routes_region_hint_from_release_notes():
+    events = [
+        {
+            "tenant_id": "t6",
+            "delivery_id": "d12",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "",
+            "region_hint": "EU",
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "t6",
+            "delivery_id": "d12",
+            "event_type": "delivery",
+            "route_region": "eu",
+        }
+    ]
+
+
 def test_unknown_region_uses_global_route():
     events = [
         {
