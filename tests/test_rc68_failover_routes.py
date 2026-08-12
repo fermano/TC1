@@ -36,6 +36,28 @@ def test_routes_ready_events_by_region():
     ]
 
 
+def test_routes_nested_context_region():
+    events = [
+        {
+            "tenant_id": "t4",
+            "delivery_id": "d9",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "global",
+            "routing": {"region": "APAC", "source": "partner-table"},
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "t4",
+            "delivery_id": "d9",
+            "event_type": "delivery",
+            "route_region": "apac",
+        }
+    ]
+
+
 def test_routes_region_hint_from_release_notes():
     events = [
         {
@@ -52,6 +74,29 @@ def test_routes_region_hint_from_release_notes():
         {
             "tenant_id": "t6",
             "delivery_id": "d12",
+            "event_type": "delivery",
+            "route_region": "eu",
+        }
+    ]
+
+
+def test_routes_fallback_region_from_candidate_export():
+    events = [
+        {
+            "tenant_id": "ferry",
+            "delivery_id": "del-884",
+            "event_type": "delivery",
+            "state": "ready",
+            "region": "",
+            "routing": "",
+            "fallback_region": "eu",
+        }
+    ]
+
+    assert build_failover_routes(events) == [
+        {
+            "tenant_id": "ferry",
+            "delivery_id": "del-884",
             "event_type": "delivery",
             "route_region": "eu",
         }
