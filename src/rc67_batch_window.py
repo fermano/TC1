@@ -11,6 +11,13 @@ def _normalize(value):
     return str(value or "").strip().lower().replace(" ", "_")
 
 
+def _window_timestamp(receipt):
+    visible_at = receipt.get("visible_at")
+    if visible_at is not None:
+        return visible_at
+    return receipt.get("created_at")
+
+
 def build_window_rows(receipts, *, window_start, window_end):
     """Return receipt rows whose visible timestamp belongs to the package window."""
     rows = []
@@ -21,8 +28,8 @@ def build_window_rows(receipts, *, window_start, window_end):
         if state not in FINAL_STATES:
             continue
 
-        created_at = receipt.get("created_at")
-        if created_at is None or created_at < window_start or created_at >= window_end:
+        package_at = _window_timestamp(receipt)
+        if package_at is None or package_at < window_start or package_at >= window_end:
             continue
 
         key = (receipt.get("tenant_id"), receipt.get("receipt_id"))
@@ -35,7 +42,8 @@ def build_window_rows(receipts, *, window_start, window_end):
                 "tenant_id": receipt.get("tenant_id"),
                 "receipt_id": receipt.get("receipt_id"),
                 "amount_cents": receipt.get("amount_cents", 0),
-                "created_at": created_at,
+                "created_at": receipt.get("created_at"),
+                "visible_at": receipt.get("visible_at"),
             }
         )
 
