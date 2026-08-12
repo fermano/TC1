@@ -86,7 +86,7 @@ def test_skips_unposted_rows():
     assert build_partner_export_rows(events) == []
 
 
-def test_exports_posted_adjustment_rows():
+def test_exports_posted_partner_credit_adjustment_rows():
     events = [
         {
             "tenant_id": "pilot",
@@ -108,3 +108,36 @@ def test_exports_posted_adjustment_rows():
             "amount_cents": -640,
         }
     ]
+
+
+def test_skips_adjustment_reasons_without_package_requirement():
+    events = [
+        {
+            "tenant_id": "pilot",
+            "partner": "atlas",
+            "external_id": "adj-773",
+            "event_type": "adjustment",
+            "state": "posted",
+            "reason": "internal_correction",
+            "amount_cents": -120,
+        },
+        {
+            "tenant_id": "pilot",
+            "partner": "nova",
+            "external_id": "adj-774",
+            "event_type": "adjustment",
+            "state": "posted",
+            "reason": "rebill",
+            "amount_cents": 820,
+        },
+        {
+            "tenant_id": "pilot",
+            "partner": "nova",
+            "external_id": "adj-775",
+            "event_type": "adjustment",
+            "state": "posted",
+            "amount_cents": -50,
+        },
+    ]
+
+    assert build_partner_export_rows(events) == []
