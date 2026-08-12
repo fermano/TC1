@@ -10,7 +10,7 @@ def _normalize(value):
 
 
 def _route_region(event):
-    region = _normalize(event.get("region"))
+    region = _normalize(event.get("region_hint") or event.get("region"))
     if region in SUPPORTED_REGIONS:
         return region
     return "global"
