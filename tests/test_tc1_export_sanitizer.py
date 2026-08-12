@@ -17,6 +17,26 @@ def test_sanitize_export_redacts_top_level_secrets():
     assert sanitized["workspace_id"] == "ws-1"
 
 
+def test_sanitize_export_redacts_nested_connector_auth():
+    payload = {
+        "tenant_id": "atlas",
+        "connectors": [
+            {
+                "name": "slack",
+                "auth": {
+                    "access_token": "xoxb-live",
+                    "client_secret": "shh",
+                },
+            }
+        ],
+    }
+
+    sanitized = sanitize_export(payload)
+
+    assert sanitized["connectors"][0]["auth"]["access_token"] == REDACTION
+    assert sanitized["connectors"][0]["auth"]["client_secret"] == REDACTION
+
+
 def test_sanitize_export_does_not_mutate_top_level_payload():
     payload = {"tenant_id": "atlas", "api_key": "sk-live-123"}
 
