@@ -13,10 +13,9 @@ def lane_key(record):
 
 
 def gate_seconds(record, default_seconds=45):
-    if record.get("gate_seconds") not in (None, ""):
-        return int(record["gate_seconds"])
-    if record.get("route_gate_seconds") not in (None, ""):
-        return int(record["route_gate_seconds"])
+    for field in ("gate_seconds", "route_gate_seconds", "cancel_after_seconds", "gate_delay_seconds"):
+        if record.get(field) not in (None, ""):
+            return int(record[field])
     return int(default_seconds)
 
 
