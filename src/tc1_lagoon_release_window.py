@@ -11,10 +11,9 @@ def route_key(record):
 
 
 def dispatch_window_seconds(record, workspace_default=300):
-    if "window_seconds" in record and record.get("window_seconds") not in (None, ""):
-        return int(record["window_seconds"])
-    if "route_window_seconds" in record and record.get("route_window_seconds") not in (None, ""):
-        return int(record["route_window_seconds"])
+    for field in ("window_seconds", "route_window_seconds", "send_after_seconds", "delay_seconds"):
+        if field in record and record.get(field) not in (None, ""):
+            return int(record[field])
     return int(workspace_default)
 
 
