@@ -2,9 +2,9 @@ DEFAULT_WAIT_MINUTES = 30
 
 
 def _coerce_minutes(value, default):
-    if value:
-        return int(value)
-    return default
+    if value is None or value == "":
+        return default
+    return int(value)
 
 
 def build_candidate_row(payload, route_defaults):
