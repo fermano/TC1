@@ -20,4 +20,5 @@ def build_candidate_row(payload, route_defaults):
         "wait_minutes": wait_minutes,
         "artifact_stage": route_defaults.get("artifact_stage", "rc101"),
         "route_signature": route_defaults.get("route_signature", "unset"),
+        "release_channel": route_defaults.get("release_channel", "candidate"),
     }
