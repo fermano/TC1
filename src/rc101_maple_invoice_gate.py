@@ -1,15 +1,22 @@
 DEFAULT_WAIT_MINUTES = 30
 
 
+def _pick_wait(payload):
+    # A present partner field wins, including zero and empty/default values.
+    if "deferMinutes" in payload:
+        return payload["deferMinutes"]
+    return payload.get("defer_minutes")
+
+
 def _coerce_minutes(value, default):
-    if value:
-        return int(value)
-    return default
+    if value is None or value == "":
+        return default
+    return int(value)
 
 
 def build_candidate_row(payload, route_defaults):
     wait_minutes = _coerce_minutes(
-        payload.get("defer_minutes"),
+        _pick_wait(payload),
         route_defaults.get("default_defer_minutes", DEFAULT_WAIT_MINUTES),
     )
     return {
