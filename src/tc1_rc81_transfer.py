@@ -4,24 +4,29 @@ The release branch emits route-scoped transfer rows for partner artifacts.
 """
 
 DEFAULT_HOLD_SECONDS = 300
+ARTIFACT_SCHEMA = "rc81.transfer.v2"
 
 
-def _present(payload, name, default):
-    if name in payload and payload[name] not in (None, ""):
-        return payload[name]
-    return default
+def _hold_seconds(payload, default):
+    # The release field wins; partner replay uses the camel-case alias.
+    for name in ("hold_seconds", "holdSeconds"):
+        if name in payload and payload[name] not in (None, ""):
+            return int(payload[name])
+    return int(default)
 
 
 def build_transfer_row(payload, defaults=None):
     defaults = {"hold_seconds": DEFAULT_HOLD_SECONDS, **(defaults or {})}
     route_id = payload.get("route_id") or payload.get("destination_id") or "primary"
-    hold_seconds = _present(payload, "hold_seconds", defaults["hold_seconds"])
-    hold_seconds = int(hold_seconds)
+    hold_seconds = _hold_seconds(payload, defaults["hold_seconds"])
+    action = "hold" if hold_seconds > 0 else "release"
     return {
         "tenant_id": payload["tenant_id"],
         "route_id": route_id,
         "transfer_id": payload["transfer_id"],
         "hold_seconds": hold_seconds,
-        "action": "hold" if hold_seconds > 0 else "release",
+        "action": action,
         "source": "rc81-route-window",
+        "artifact_schema": ARTIFACT_SCHEMA,
+        "operator_key": f"{route_id}:{payload['transfer_id']}:{action}",
     }
