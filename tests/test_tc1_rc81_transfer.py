@@ -1,4 +1,4 @@
-from src.tc1_rc81_transfer import build_transfer_row
+from src.tc1_rc81_transfer import ARTIFACT_SCHEMA, build_transfer_row
 
 
 def test_uses_route_scoped_shape():
@@ -11,6 +11,8 @@ def test_uses_route_scoped_shape():
     assert row["route_id"] == "ach"
     assert row["action"] == "hold"
     assert row["source"] == "rc81-route-window"
+    assert row["artifact_schema"] == ARTIFACT_SCHEMA
+    assert row["operator_key"] == "ach:tr-884:hold"
 
 
 def test_defaults_missing_hold_window():

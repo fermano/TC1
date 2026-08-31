@@ -4,6 +4,7 @@ The release branch emits route-scoped transfer rows for partner artifacts.
 """
 
 DEFAULT_HOLD_SECONDS = 300
+ARTIFACT_SCHEMA = "rc81.transfer.v2"
 
 
 def build_transfer_row(payload, defaults=None):
@@ -11,11 +12,14 @@ def build_transfer_row(payload, defaults=None):
     route_id = payload.get("route_id") or payload.get("destination_id") or "primary"
     hold_seconds = payload.get("hold_seconds") or defaults["hold_seconds"]
     hold_seconds = int(hold_seconds)
+    action = "hold" if hold_seconds > 0 else "release"
     return {
         "tenant_id": payload["tenant_id"],
         "route_id": route_id,
         "transfer_id": payload["transfer_id"],
         "hold_seconds": hold_seconds,
-        "action": "hold" if hold_seconds > 0 else "release",
+        "action": action,
         "source": "rc81-route-window",
+        "artifact_schema": ARTIFACT_SCHEMA,
+        "operator_key": f"{route_id}:{payload['transfer_id']}:{action}",
     }
