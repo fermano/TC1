@@ -8,4 +8,5 @@ def candidate_metadata(route_id):
     return {
         "artifact_stage": "rc105-candidate",
         "route_signature": f"route:{route_id}",
+        "replay_origin": "partner-replay",
     }
