@@ -12,4 +12,5 @@ def release_metadata(route_id):
     return {
         "artifact_stage": "rc104-candidate",
         "route_signature": f"route:{route_id}",
+        "release_channel": "rc104",
     }
