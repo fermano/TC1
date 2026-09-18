@@ -64,11 +64,31 @@ class TicketWorkflowSeedTests(unittest.TestCase):
             {"owner": "alpha", "status": "queued", "source": "api"},
         )
 
+    def test_summary_uses_safe_source_label_when_opted_in(self):
+        self.assertEqual(
+            delivery_summary(
+                {
+                    "owner": "alpha",
+                    "status": "queued",
+                    "source_label": "Support handoff",
+                    "source_kind": "partner-retry",
+                    "source": "https://hooks.example.test/callback",
+                },
+                include_source=True,
+            ),
+            {"owner": "alpha", "status": "queued", "source": "Support handoff"},
+        )
+
     def test_summary_omits_blank_or_missing_source_when_opted_in(self):
         for record in (
             {"owner": "alpha", "status": "queued"},
             {"owner": "alpha", "status": "queued", "source": "   "},
             {"owner": "alpha", "status": "queued", "source": None},
+            {
+                "owner": "alpha",
+                "status": "queued",
+                "source": "https://hooks.example.test/callback",
+            },
         ):
             with self.subTest(record=record):
                 self.assertEqual(
