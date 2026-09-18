@@ -9,16 +9,16 @@ from src.handoff_models import DeliverySnapshot, HandoffDeliveryEvent, HandoffRe
 
 class HandoffDeliveryLedger:
     def __init__(self) -> None:
-        self._deliveries: dict[tuple[int, str], HandoffDeliveryEvent] = {}
+        self._deliveries: dict[tuple[int, str | None, str], HandoffDeliveryEvent] = {}
         self._entries: dict[
-            str, tuple[tuple[int, int], HandoffRecord | None]
+            tuple[str | None, str], tuple[tuple[int, int], HandoffRecord | None]
         ] = {}
-        self._first_seen: dict[str, int] = {}
+        self._first_seen: dict[tuple[str | None, str], int] = {}
 
     def apply(self, events: Iterable[HandoffDeliveryEvent]) -> DeliverySnapshot:
         for event in events:
             self._validate(event)
-            delivery_key = (event.producer_epoch, event.delivery_id)
+            delivery_key = (event.producer_epoch, event.lane, event.delivery_id)
             prior_delivery = self._deliveries.get(delivery_key)
             if prior_delivery is not None:
                 if prior_delivery != event:
@@ -27,20 +27,21 @@ class HandoffDeliveryLedger:
                     )
                 continue
 
-            current = self._entries.get(event.signal_id)
+            entry_key = (event.lane, event.signal_id)
+            current = self._entries.get(entry_key)
             self._deliveries[delivery_key] = event
-            self._first_seen.setdefault(event.signal_id, len(self._first_seen))
+            self._first_seen.setdefault(entry_key, len(self._first_seen))
 
             version = (event.producer_epoch, event.sequence)
             if current is not None and version <= current[0]:
                 continue
 
             record = event.record if event.action == "upsert" else None
-            self._entries[event.signal_id] = (version, record)
+            self._entries[entry_key] = (version, record)
 
         active = [
-            (self._first_seen[signal_id], record)
-            for signal_id, (_, record) in self._entries.items()
+            (self._first_seen[entry_key], record)
+            for entry_key, (_, record) in self._entries.items()
             if record is not None
         ]
         active.sort(key=lambda item: item[0])
