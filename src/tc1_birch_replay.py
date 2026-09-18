@@ -4,13 +4,13 @@ from src.tc1_birch_contract import decode_delivery_key, delivery_context, delive
 from src.tc1_birch_intake import hold_for, source_for
 
 
-def restore_deliveries(persisted_keys, events, default_seconds=120):
+def restore_deliveries(persisted_keys, events, default_seconds=120, artifact_ref="birch-rc-3"):
     deliveries = {}
     for persisted_key in persisted_keys:
         tenant_id, channel_id, message_id, source = decode_delivery_key(persisted_key)
         deliveries[delivery_key(tenant_id, channel_id, message_id, source)] = {
             "state": "queued",
-            **delivery_context(channel_id, source),
+            **delivery_context(channel_id, source, artifact_ref),
         }
 
     for event in events:
@@ -24,6 +24,6 @@ def restore_deliveries(persisted_keys, events, default_seconds=120):
         deliveries[key] = {
             "state": "queued",
             "hold_seconds": hold_for(event, default_seconds),
-            **delivery_context(event["channel_id"], source),
+            **delivery_context(event["channel_id"], source, artifact_ref),
         }
     return deliveries
