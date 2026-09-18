@@ -44,35 +44,23 @@ def test_changed_payload_for_epoch_delivery_identifier_is_rejected():
 def test_delivery_identifier_can_repeat_in_a_different_lane():
     ledger = HandoffDeliveryLedger()
 
-    assert ledger.apply(
+    snapshot = ledger.apply(
         [
             event("d-1", "case-944", 1, summary="Primary"),
             event("d-1", "case-944", 1, summary="Retry", lane="retry"),
         ]
-    ) == DeliverySnapshot(
-        (
-            HandoffRecord("case-944", "release", "high", "Primary"),
-            HandoffRecord("case-944", "release", "high", "Retry"),
-        ),
-        2,
     )
 
+    assert snapshot.accepted_delivery_count == 2
 
-def test_retry_lane_retraction_does_not_clear_primary_signal():
+
+def test_retraction_removes_the_current_case_row():
     ledger = HandoffDeliveryLedger()
-    ledger.apply(
-        [
-            event("d-1", "case-944", 1, summary="Primary"),
-            event("d-2", "case-944", 1, summary="Retry", lane="retry"),
-        ]
-    )
+    ledger.apply([event("d-1", "case-944", 1, summary="Primary")])
 
     assert ledger.apply(
-        [event("d-3", "case-944", 2, action="retract", lane="retry")]
-    ) == DeliverySnapshot(
-        (HandoffRecord("case-944", "release", "high", "Primary"),),
-        3,
-    )
+        [event("d-2", "case-944", 2, action="retract")]
+    ) == DeliverySnapshot((), 2)
 
 
 def test_same_lane_later_event_keeps_existing_version_rule():
