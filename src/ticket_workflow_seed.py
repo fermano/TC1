@@ -26,7 +26,48 @@ def delivery_summary(record: dict, include_source: bool = False) -> dict:
         "status": record["status"],
     }
     if include_source:
-        source = (record.get("source") or "").strip()
+        source = _safe_provenance_label(record)
         if source:
             summary["source"] = source
     return summary
+
+
+def _safe_provenance_label(record: dict) -> str:
+    for field, legacy_token in (
+        ("source_label", False),
+        ("source_kind", False),
+        ("source", True),
+    ):
+        label = _safe_label(record.get(field), legacy_token=legacy_token)
+        if label:
+            return label
+    return ""
+
+
+def _safe_label(value: object, *, legacy_token: bool) -> str:
+    if not isinstance(value, str):
+        return ""
+
+    label = " ".join(value.split())
+    if not label or _looks_unsafe_provenance(label):
+        return ""
+    if legacy_token and " " in label:
+        return ""
+    return label
+
+
+def _looks_unsafe_provenance(label: str) -> bool:
+    lowered = label.lower()
+    if "://" in lowered or lowered.startswith("www.") or "/" in label or "\\" in label:
+        return True
+    unsafe_markers = (
+        "api_key",
+        "apikey",
+        "callback_url",
+        "credential",
+        "password",
+        "secret",
+        "source_url",
+        "token=",
+    )
+    return any(marker in lowered for marker in unsafe_markers)
