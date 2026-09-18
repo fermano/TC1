@@ -50,10 +50,69 @@ class TicketWorkflowSeedTests(unittest.TestCase):
     def test_summary_contains_existing_fields(self):
         self.assertEqual(
             delivery_summary(
-                {"owner": " Billing-Ops ", "status": "queued", "source": "api"}
+                {
+                    "owner": " Billing-Ops ",
+                    "status": "queued",
+                    "source": "api",
+                    "lane": "retry",
+                }
             ),
             {"owner": "billing-ops", "status": "queued"},
         )
+
+    def test_summary_includes_lane_when_opted_in(self):
+        self.assertEqual(
+            delivery_summary(
+                {"owner": "alpha", "status": "queued", "lane": " Retry "},
+                include_lane=True,
+            ),
+            {"owner": "alpha", "status": "queued", "lane": "retry"},
+        )
+
+    def test_summary_uses_legacy_lane_alias_when_canonical_absent(self):
+        self.assertEqual(
+            delivery_summary(
+                {
+                    "owner": "alpha",
+                    "status": "queued",
+                    "delivery_lane": "manual-replay",
+                },
+                include_lane=True,
+            ),
+            {"owner": "alpha", "status": "queued", "lane": "manual-replay"},
+        )
+
+    def test_summary_defaults_lane_to_primary_when_opted_in(self):
+        self.assertEqual(
+            delivery_summary(
+                {"owner": "alpha", "status": "queued"},
+                include_lane=True,
+            ),
+            {"owner": "alpha", "status": "queued", "lane": "primary"},
+        )
+
+    def test_summary_rejects_blank_canonical_lane_without_alias_fallback(self):
+        with self.assertRaisesRegex(ValueError, "lane must"):
+            delivery_summary(
+                {
+                    "owner": "alpha",
+                    "status": "queued",
+                    "lane": "  ",
+                    "delivery_lane": "retry",
+                },
+                include_lane=True,
+            )
+
+    def test_summary_rejects_malformed_legacy_lane_alias(self):
+        with self.assertRaisesRegex(ValueError, "delivery_lane must"):
+            delivery_summary(
+                {
+                    "owner": "alpha",
+                    "status": "queued",
+                    "delivery_lane": "retry_lane",
+                },
+                include_lane=True,
+            )
 
     def test_summary_includes_trimmed_source_when_opted_in(self):
         self.assertEqual(
@@ -77,6 +136,26 @@ class TicketWorkflowSeedTests(unittest.TestCase):
                 include_source=True,
             ),
             {"owner": "alpha", "status": "queued", "source": "Support handoff"},
+        )
+
+    def test_summary_can_include_source_and_lane_together(self):
+        self.assertEqual(
+            delivery_summary(
+                {
+                    "owner": "alpha",
+                    "status": "queued",
+                    "source_label": "Support handoff",
+                    "lane": "retry",
+                },
+                include_source=True,
+                include_lane=True,
+            ),
+            {
+                "owner": "alpha",
+                "status": "queued",
+                "lane": "retry",
+                "source": "Support handoff",
+            },
         )
 
     def test_summary_omits_blank_or_missing_source_when_opted_in(self):

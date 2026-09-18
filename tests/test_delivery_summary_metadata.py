@@ -12,10 +12,45 @@ class SummarySourceTests(unittest.TestCase):
                     "source": "api",
                     "source_label": "Partner retry",
                     "source_url": "https://hooks.example.test/callback",
+                    "lane": "retry",
                 }
             ),
             {"owner": "ops", "status": "sent"},
         )
+
+    def test_opt_in_includes_lane_label(self):
+        self.assertEqual(
+            delivery_summary_with_source(
+                {"owner": "ops", "status": "sent", "lane": " Retry "},
+                include_lane=True,
+            )["lane"],
+            "retry",
+        )
+
+    def test_opt_in_lane_uses_legacy_alias_when_canonical_absent(self):
+        self.assertEqual(
+            delivery_summary_with_source(
+                {
+                    "owner": "ops",
+                    "status": "sent",
+                    "delivery_lane": "manual-replay",
+                },
+                include_lane=True,
+            )["lane"],
+            "manual-replay",
+        )
+
+    def test_opt_in_lane_rejects_blank_canonical_without_alias_fallback(self):
+        with self.assertRaisesRegex(ValueError, "lane must"):
+            delivery_summary_with_source(
+                {
+                    "owner": "ops",
+                    "status": "sent",
+                    "lane": "  ",
+                    "delivery_lane": "retry",
+                },
+                include_lane=True,
+            )
 
     def test_opt_in_trims_source(self):
         self.assertEqual(
