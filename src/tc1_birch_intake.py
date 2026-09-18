@@ -1,7 +1,12 @@
 """Birch partner-event intake."""
 
 def source_for(event):
-    return event["source"]
+    for field in ("source", "sourceId"):
+        value = event.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            continue
+        return value
+    return "primary"
 
 
 def hold_for(event, default_seconds):
