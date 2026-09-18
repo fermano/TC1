@@ -27,26 +27,39 @@ def test_replaces_snapshot_when_workspace_version_changes():
     assert new.fields == ("invoice_id", "amount", "currency")
 
 
-def test_keeps_current_snapshot_for_late_field_listing_at_same_version():
-    cache = ExportSchemaCache()
-
-    current = cache.snapshot("ws-204", 42, ["invoice_id", "amount"])
-    late_listing = cache.snapshot(
-        "ws-204", 42, ["invoice_id", "amount", "tax_code"]
-    )
-
-    assert late_listing is current
-    assert late_listing.fields == ("invoice_id", "amount")
-
-
-def test_keeps_current_snapshot_for_lower_version_notification():
+def test_replaces_snapshot_when_fields_change_at_same_version():
     cache = ExportSchemaCache()
 
     current = cache.snapshot("ws-204", 42, ["invoice_id", "amount", "tax_code"])
-    lower_version = cache.snapshot("ws-204", 41, ["invoice_id", "amount"])
+    corrected = cache.snapshot("ws-204", 42, ["invoice_id", "amount"])
 
-    assert lower_version is current
-    assert lower_version.workspace_version == 42
+    assert corrected is not current
+    assert corrected.workspace_version == 42
+    assert corrected.fields == ("invoice_id", "amount")
+
+
+def test_replaces_arbor_snapshot_after_partner_revision_rollback():
+    cache = ExportSchemaCache()
+
+    current = cache.snapshot(
+        "arbor-41", 18, ["invoice_id", "amount", "tax_code"]
+    )
+    rolled_back = cache.snapshot("arbor-41", 17, ["invoice_id", "amount"])
+
+    assert rolled_back is not current
+    assert rolled_back.workspace_version == 17
+    assert rolled_back.fields == ("invoice_id", "amount")
+
+
+def test_arbor_rollback_does_not_clear_unrelated_workspace_snapshot():
+    cache = ExportSchemaCache()
+
+    other = cache.snapshot("cedar-17", 17, ["invoice_id", "tax_code"])
+    cache.snapshot("arbor-41", 18, ["invoice_id", "amount", "tax_code"])
+    cache.snapshot("arbor-41", 17, ["invoice_id", "amount"])
+    repeated_other = cache.snapshot("cedar-17", 17, ["invoice_id", "tax_code"])
+
+    assert repeated_other is other
 
 
 def test_clear_discards_current_snapshot():
