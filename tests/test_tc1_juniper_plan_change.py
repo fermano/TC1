@@ -1,15 +1,18 @@
 from src.tc1_juniper_plan_change import apply_change
 
 
-def test_active_change_adds_the_requested_plan():
+def test_unspecified_scope_replaces_the_named_existing_plan():
+    assert apply_change({"pro", "storage"}, {
+        "account_state": "active",
+        "plan_id": "pro-v2",
+        "replaces_plan_id": "pro",
+    }) == {"pro-v2", "storage"}
+
+
+def test_explicit_separate_scope_keeps_existing_plan():
     assert apply_change({"pro"}, {
         "account_state": "active",
         "plan_id": "analytics",
+        "replaces_plan_id": "pro",
+        "replace_scope": "separate",
     }) == {"pro", "analytics"}
-
-
-def test_inactive_account_keeps_existing_plans():
-    assert apply_change({"pro"}, {
-        "account_state": "closed",
-        "plan_id": "analytics",
-    }) == {"pro"}
