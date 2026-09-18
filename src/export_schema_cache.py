@@ -21,8 +21,7 @@ class ExportSchemaCache:
         current = self._current.get(workspace_id)
         if (
             current is not None
-            and current.workspace_version == workspace_version
-            and current.fields == observed_fields
+            and current.workspace_version >= workspace_version
         ):
             return current
 
