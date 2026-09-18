@@ -15,8 +15,10 @@ from src.handoff_models import (
 class HandoffDeliveryLedger:
     def __init__(self) -> None:
         self._deliveries: dict[tuple[int, str, str], HandoffDeliveryEvent] = {}
-        self._entries: dict[str, tuple[tuple[int, int], HandoffRecord | None]] = {}
-        self._first_seen: dict[str, int] = {}
+        self._entries: dict[
+            tuple[str, str], tuple[tuple[int, int], HandoffRecord | None]
+        ] = {}
+        self._first_seen: dict[tuple[str, str], int] = {}
 
     def apply(self, events: Iterable[HandoffDeliveryEvent]) -> DeliverySnapshot:
         for event in events:
@@ -30,9 +32,7 @@ class HandoffDeliveryLedger:
                     )
                 continue
 
-            # The support ribbon has one row per case, irrespective of the
-            # delivery lane that supplied its most recent update.
-            entry_key = event.signal_id
+            entry_key = (event.lane, event.signal_id)
             current = self._entries.get(entry_key)
             self._deliveries[delivery_key] = event
             self._first_seen.setdefault(entry_key, len(self._first_seen))
