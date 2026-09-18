@@ -27,30 +27,26 @@ def test_replaces_snapshot_when_workspace_version_changes():
     assert new.fields == ("invoice_id", "amount", "currency")
 
 
-def test_replaces_snapshot_when_fields_change_at_same_version():
+def test_keeps_current_snapshot_for_late_field_listing_at_same_version():
     cache = ExportSchemaCache()
 
-    old = cache.snapshot("ws-204", 42, ["invoice_id", "amount"])
-    corrected = cache.snapshot(
+    current = cache.snapshot("ws-204", 42, ["invoice_id", "amount"])
+    late_listing = cache.snapshot(
         "ws-204", 42, ["invoice_id", "amount", "tax_code"]
     )
 
-    assert corrected is not old
-    assert corrected.fields == ("invoice_id", "amount", "tax_code")
+    assert late_listing is current
+    assert late_listing.fields == ("invoice_id", "amount")
 
 
-def test_replaces_snapshot_when_version_number_is_reused():
+def test_keeps_current_snapshot_for_lower_version_notification():
     cache = ExportSchemaCache()
 
-    original = cache.snapshot("ws-204", 42, ["invoice_id", "amount"])
-    rolled_back = cache.snapshot("ws-204", 41, ["invoice_id"])
-    reapplied = cache.snapshot(
-        "ws-204", 42, ["invoice_id", "amount", "tax_code"]
-    )
+    current = cache.snapshot("ws-204", 42, ["invoice_id", "amount", "tax_code"])
+    lower_version = cache.snapshot("ws-204", 41, ["invoice_id", "amount"])
 
-    assert rolled_back.workspace_version == 41
-    assert reapplied is not original
-    assert reapplied.fields == ("invoice_id", "amount", "tax_code")
+    assert lower_version is current
+    assert lower_version.workspace_version == 42
 
 
 def test_clear_discards_current_snapshot():
