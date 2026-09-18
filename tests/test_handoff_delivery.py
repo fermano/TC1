@@ -63,6 +63,29 @@ def test_retraction_removes_the_current_case_row():
     ) == DeliverySnapshot((), 2)
 
 
+def test_retry_correction_does_not_clear_nimbus_primary_ribbon_owner():
+    ledger = HandoffDeliveryLedger()
+
+    snapshot = ledger.apply(
+        [
+            event("p-441", "nb-604", 7, summary="Nimbus primary", epoch=41),
+            event(
+                "r-118",
+                "nb-604",
+                1,
+                action="retract",
+                epoch=42,
+                lane="retry",
+            ),
+        ]
+    )
+
+    assert snapshot == DeliverySnapshot(
+        (HandoffRecord("nb-604", "release", "high", "Nimbus primary"),),
+        2,
+    )
+
+
 def test_same_lane_later_event_keeps_existing_version_rule():
     ledger = HandoffDeliveryLedger()
     ledger.apply([event("d-1", "case-944", 3, summary="Current", lane="retry")])
