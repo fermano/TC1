@@ -21,6 +21,7 @@ class HandoffDeliveryEvent:
     sequence: int
     action: str
     record: HandoffRecord | None
+    lane: str | None = None
 
 
 @dataclass(frozen=True)
