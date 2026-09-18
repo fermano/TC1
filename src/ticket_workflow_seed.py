@@ -1,3 +1,6 @@
+from src.handoff_models import DEFAULT_DELIVERY_LANE, normalize_delivery_lane
+
+
 DEFAULT_OWNER = "engineering-ops"
 
 
@@ -19,17 +22,37 @@ def filter_delivery_records(records: list[dict], owners: list[str | None] | None
     ]
 
 
-def delivery_summary(record: dict, include_source: bool = False) -> dict:
+def delivery_summary(
+    record: dict,
+    include_source: bool = False,
+    include_lane: bool = False,
+) -> dict:
     """Return stable summary fields with optional source metadata."""
     summary = {
         "owner": normalize_delivery_owner(record.get("owner")),
         "status": record["status"],
     }
+    if include_lane:
+        summary["lane"] = _summary_lane_label(record)
     if include_source:
         source = _safe_provenance_label(record)
         if source:
             summary["source"] = source
     return summary
+
+
+def _summary_lane_label(record: dict) -> str:
+    if "lane" in record:
+        return _required_lane_label(record["lane"], "lane")
+    if "delivery_lane" in record:
+        return _required_lane_label(record["delivery_lane"], "delivery_lane")
+    return DEFAULT_DELIVERY_LANE
+
+
+def _required_lane_label(value: object, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a string")
+    return normalize_delivery_lane(value, field_name=field_name)
 
 
 def _safe_provenance_label(record: dict) -> str:
