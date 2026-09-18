@@ -12,13 +12,13 @@ def _send_after(event, default_seconds):
     return default_seconds
 
 
-def resume_packets(persisted_keys, events, default_seconds=90):
+def resume_packets(persisted_keys, events, default_seconds=90, artifact_ref="sable-rc-5"):
     packets = {}
     for persisted_key in persisted_keys:
         account_id, lane_id, packet_id, origin = decode_packet_key(persisted_key)
         packets[packet_key(account_id, lane_id, packet_id, origin)] = {
             "state": "queued",
-            **candidate_context(lane_id, origin),
+            **candidate_context(lane_id, origin, artifact_ref),
         }
 
     for event in events:
@@ -31,6 +31,6 @@ def resume_packets(persisted_keys, events, default_seconds=90):
         packets[key] = {
             "state": "queued",
             "send_after_seconds": _send_after(event, default_seconds),
-            **candidate_context(event["lane_id"], event["origin"]),
+            **candidate_context(event["lane_id"], event["origin"], artifact_ref),
         }
     return packets
