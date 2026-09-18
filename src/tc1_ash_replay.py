@@ -12,13 +12,13 @@ def _delay(event, default_seconds):
     return default_seconds
 
 
-def restore_records(persisted_keys, events, default_seconds=75):
+def restore_records(persisted_keys, events, default_seconds=75, artifact_ref="ash-rc-2"):
     records = {}
     for persisted_key in persisted_keys:
         account_id, lane_id, request_id, origin = decode_record_key(persisted_key)
         records[record_key(account_id, lane_id, request_id, origin)] = {
             "state": "queued",
-            **release_context(lane_id, origin),
+            **release_context(lane_id, origin, artifact_ref),
         }
 
     for event in events:
@@ -31,6 +31,6 @@ def restore_records(persisted_keys, events, default_seconds=75):
         records[key] = {
             "state": "queued",
             "delay_seconds": _delay(event, default_seconds),
-            **release_context(event["lane_id"], event["origin"]),
+            **release_context(event["lane_id"], event["origin"], artifact_ref),
         }
     return records
