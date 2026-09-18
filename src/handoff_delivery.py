@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from src.handoff_models import DeliverySnapshot, HandoffDeliveryEvent, HandoffRecord
+from src.handoff_models import (
+    DeliverySnapshot,
+    HandoffDeliveryEvent,
+    HandoffRecord,
+    normalize_delivery_lane,
+)
 
 
 class HandoffDeliveryLedger:
@@ -48,6 +53,28 @@ class HandoffDeliveryLedger:
         return DeliverySnapshot(
             records=tuple(record for _, record in active),
             accepted_delivery_count=len(self._deliveries),
+        )
+
+    def case_timeline(
+        self, signal_id: str, *, lane: str | None = None
+    ) -> tuple[HandoffDeliveryEvent, ...]:
+        selected_lane = normalize_delivery_lane(lane) if lane is not None else None
+        events = (
+            event
+            for event in self._deliveries.values()
+            if event.signal_id == signal_id
+            and (selected_lane is None or event.lane == selected_lane)
+        )
+        return tuple(
+            sorted(
+                events,
+                key=lambda event: (
+                    event.producer_epoch,
+                    event.sequence,
+                    event.lane,
+                    event.delivery_id,
+                ),
+            )
         )
 
     @staticmethod
