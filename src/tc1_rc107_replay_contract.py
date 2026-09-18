@@ -1,4 +1,4 @@
-"""Partial RC107 replay-row contract."""
+"""Current RC107 replay-row contract."""
 
 def replay_key(tenant_id, route_id, job_id, source=None):
     key = f"{tenant_id}:{route_id}:{job_id}"
@@ -16,6 +16,7 @@ def candidate_metadata(route_id, source=None):
     metadata = {
         "artifact_stage": "rc107-candidate",
         "route_signature": f"route:{route_id}",
+        "replay_generation": "e-16",
     }
     if source is not None:
         metadata["source_channel"] = source
