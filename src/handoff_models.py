@@ -11,6 +11,7 @@ class HandoffRecord:
     owner: str
     severity: str
     summary: str
+    lane: str | None = None
 
 
 @dataclass(frozen=True)
