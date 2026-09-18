@@ -40,3 +40,11 @@ def test_uses_universal_fallback():
 def test_raises_without_match_or_fallback():
     with pytest.raises(ValueError, match="no artifact"):
         select_release_artifact("rc-42", "darwin-arm64", CANDIDATES[:2])
+
+
+def test_keeps_platform_selection_independent_within_one_release():
+    amd = select_release_artifact("rc-42", "linux-amd64", CANDIDATES)
+    arm = select_release_artifact("rc-42", "linux-arm64", CANDIDATES)
+
+    assert amd["digest"] == "sha256:amd"
+    assert arm["digest"] == "sha256:arm"
