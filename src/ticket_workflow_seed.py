@@ -25,6 +25,9 @@ def delivery_summary(record: dict, include_source: bool = False) -> dict:
         "owner": normalize_delivery_owner(record.get("owner")),
         "status": record["status"],
     }
+    lane = record.get("lane") or record.get("delivery_lane")
+    if isinstance(lane, str) and lane.strip():
+        summary["lane"] = lane.strip()
     if include_source:
         source = _safe_provenance_label(record)
         if source:
