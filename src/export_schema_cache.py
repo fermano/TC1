@@ -19,10 +19,9 @@ class ExportSchemaCache:
     ) -> SchemaSnapshot:
         observed_fields = tuple(fields)
         current = self._current.get(workspace_id)
-        if (
-            current is not None
-            and current.workspace_version >= workspace_version
-        ):
+        if current is not None and workspace_version < current.workspace_version:
+            raise ValueError("schema version is older than current snapshot")
+        if current is not None and current.workspace_version == workspace_version:
             return current
 
         snapshot = SchemaSnapshot(workspace_id, workspace_version, observed_fields)
