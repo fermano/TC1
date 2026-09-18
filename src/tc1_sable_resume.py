@@ -12,6 +12,15 @@ def _send_after(event, default_seconds):
     return default_seconds
 
 
+def _origin(event):
+    for field in ("origin", "originId"):
+        value = event.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            continue
+        return value
+    return "native"
+
+
 def resume_packets(persisted_keys, events, default_seconds=90):
     packets = {}
     for persisted_key in persisted_keys:
@@ -22,15 +31,14 @@ def resume_packets(persisted_keys, events, default_seconds=90):
         }
 
     for event in events:
-        key = packet_key(
-            event["account_id"], event["lane_id"], event["packet_id"], event["origin"]
-        )
+        origin = _origin(event)
+        key = packet_key(event["account_id"], event["lane_id"], event["packet_id"], origin)
         if event["kind"] == "void":
             packets.pop(key, None)
             continue
         packets[key] = {
             "state": "queued",
             "send_after_seconds": _send_after(event, default_seconds),
-            **candidate_context(event["lane_id"], event["origin"]),
+            **candidate_context(event["lane_id"], origin),
         }
     return packets
