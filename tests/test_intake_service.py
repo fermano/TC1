@@ -84,6 +84,89 @@ def test_handoff_rows_accept_legacy_event_id_and_return_canonical_records() -> N
     ]
 
 
+def test_handoff_rows_accept_canonical_lane() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "lane": " Retry ",
+        }
+    ]
+
+    assert filter_handoff_rows(rows) == [
+        HandoffRecord("evt-17", "platform", "high", "Queue delay", lane="retry")
+    ]
+
+
+def test_handoff_rows_accept_legacy_delivery_lane_alias() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "delivery_lane": "manual-replay",
+        }
+    ]
+
+    assert filter_handoff_rows(rows) == [
+        HandoffRecord(
+            "evt-17",
+            "platform",
+            "high",
+            "Queue delay",
+            lane="manual-replay",
+        )
+    ]
+
+
+def test_handoff_rows_default_missing_lane_to_primary() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+        }
+    ]
+
+    assert filter_handoff_rows(rows)[0].lane == "primary"
+
+
+@pytest.mark.parametrize("lane", ["", "  ", None])
+def test_handoff_rows_reject_blank_canonical_lane_without_alias_fallback(lane) -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "lane": lane,
+            "delivery_lane": "retry",
+        }
+    ]
+
+    with pytest.raises(ValueError, match="lane must"):
+        filter_handoff_rows(rows)  # type: ignore[list-item]
+
+
+def test_handoff_rows_reject_malformed_legacy_delivery_lane() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "delivery_lane": "retry_lane",
+        }
+    ]
+
+    with pytest.raises(ValueError, match="delivery_lane must"):
+        filter_handoff_rows(rows)
+
+
 def test_handoff_rows_accept_matching_legacy_identifier_aliases() -> None:
     rows = [
         {
@@ -132,6 +215,19 @@ def test_handoff_rows_merge_retries_in_first_seen_position() -> None:
     assert filter_handoff_rows(rows, collapse_retries=True) == [
         HandoffRecord("evt-17", "release-ops", "critical", "Confirmed blocker"),
         HandoffRecord("evt-22", "support", "high", "Separate event"),
+    ]
+
+
+def test_handoff_rows_collapse_retries_by_signal_and_lane() -> None:
+    rows = [
+        HandoffRecord("evt-17", "platform", "medium", "Primary", lane="primary"),
+        HandoffRecord("evt-17", "release", "critical", "Retry", lane="retry"),
+        HandoffRecord("evt-17", "ops", "high", "Primary revised", lane="primary"),
+    ]
+
+    assert filter_handoff_rows(rows, collapse_retries=True) == [
+        HandoffRecord("evt-17", "ops", "high", "Primary revised", lane="primary"),
+        HandoffRecord("evt-17", "release", "critical", "Retry", lane="retry"),
     ]
 
 
