@@ -11,9 +11,12 @@ def decode_delivery_key(key):
     return tuple(parts)
 
 
-def delivery_context(channel_id, source):
+def delivery_context(channel_id, source, artifact_ref):
     return {
-        "release": "birch-1",
+        "release": "birch-3",
+        "record_shape": "v3",
+        "delivery_epoch": "g11",
         "channel": channel_id,
+        "artifact_ref": artifact_ref,
         "source": source,
     }
