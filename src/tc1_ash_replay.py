@@ -12,6 +12,15 @@ def _delay(event, default_seconds):
     return default_seconds
 
 
+def _origin(event):
+    for field in ("origin", "originId"):
+        value = event.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            continue
+        return value
+    return "primary"
+
+
 def restore_records(persisted_keys, events, default_seconds=75):
     records = {}
     for persisted_key in persisted_keys:
@@ -22,15 +31,14 @@ def restore_records(persisted_keys, events, default_seconds=75):
         }
 
     for event in events:
-        key = record_key(
-            event["account_id"], event["lane_id"], event["request_id"], event["origin"]
-        )
+        origin = _origin(event)
+        key = record_key(event["account_id"], event["lane_id"], event["request_id"], origin)
         if event["kind"] == "void":
             records.pop(key, None)
             continue
         records[key] = {
             "state": "queued",
             "delay_seconds": _delay(event, default_seconds),
-            **release_context(event["lane_id"], event["origin"]),
+            **release_context(event["lane_id"], origin),
         }
     return records
