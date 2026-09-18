@@ -12,11 +12,12 @@ def event(
     summary="Open",
     *,
     epoch=18,
+    lane="primary",
 ):
     record = None if action == "retract" else HandoffRecord(
         signal, "release", "high", summary
     )
-    return HandoffDeliveryEvent(epoch, delivery, signal, sequence, action, record)
+    return HandoffDeliveryEvent(epoch, delivery, signal, sequence, action, record, lane)
 
 
 def test_replayed_delivery_is_idempotent():
@@ -37,6 +38,52 @@ def test_changed_payload_for_epoch_delivery_identifier_is_rejected():
 
     assert ledger.apply([]) == DeliverySnapshot(
         (HandoffRecord("sig-9", "release", "high", "Open"),), 1
+    )
+
+
+def test_delivery_identifier_can_repeat_in_a_different_lane():
+    ledger = HandoffDeliveryLedger()
+
+    assert ledger.apply(
+        [
+            event("d-1", "case-944", 1, summary="Primary"),
+            event("d-1", "case-944", 1, summary="Retry", lane="retry"),
+        ]
+    ) == DeliverySnapshot(
+        (
+            HandoffRecord("case-944", "release", "high", "Primary"),
+            HandoffRecord("case-944", "release", "high", "Retry"),
+        ),
+        2,
+    )
+
+
+def test_retry_lane_retraction_does_not_clear_primary_signal():
+    ledger = HandoffDeliveryLedger()
+    ledger.apply(
+        [
+            event("d-1", "case-944", 1, summary="Primary"),
+            event("d-2", "case-944", 1, summary="Retry", lane="retry"),
+        ]
+    )
+
+    assert ledger.apply(
+        [event("d-3", "case-944", 2, action="retract", lane="retry")]
+    ) == DeliverySnapshot(
+        (HandoffRecord("case-944", "release", "high", "Primary"),),
+        3,
+    )
+
+
+def test_same_lane_later_event_keeps_existing_version_rule():
+    ledger = HandoffDeliveryLedger()
+    ledger.apply([event("d-1", "case-944", 3, summary="Current", lane="retry")])
+
+    assert ledger.apply(
+        [event("d-2", "case-944", 2, summary="Stale", lane="retry")]
+    ) == DeliverySnapshot(
+        (HandoffRecord("case-944", "release", "high", "Current"),),
+        2,
     )
 
 
