@@ -11,9 +11,11 @@ def decode_record_key(key):
     return tuple(parts)
 
 
-def release_context(lane_id, origin):
+def release_context(lane_id, origin, artifact_ref):
     return {
-        "release": "ash-1",
+        "release": "ash-2",
+        "record_shape": "v2",
         "lane": lane_id,
+        "artifact_ref": artifact_ref,
         "origin": origin,
     }
