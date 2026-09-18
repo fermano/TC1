@@ -145,6 +145,43 @@ def test_new_epoch_reactivates_after_retraction_with_lower_sequence():
     )
 
 
+def test_case_timeline_uses_acceptance_order_after_restart_observation():
+    ledger = HandoffDeliveryLedger()
+
+    ledger.apply(
+        [
+            event("d-retry", "case-944", 17, action="retract", epoch=45, lane="retry"),
+            event("d-primary", "case-944", 2, summary="Primary accepted", epoch=44),
+        ]
+    )
+
+    assert [
+        (item.action, item.lane, item.producer_epoch, item.sequence)
+        for item in ledger.case_timeline("case-944")
+    ] == [
+        ("upsert", "primary", 44, 2),
+        ("retract", "retry", 45, 17),
+    ]
+    assert ledger.apply([]) == DeliverySnapshot(
+        (HandoffRecord("case-944", "release", "high", "Primary accepted"),),
+        2,
+    )
+
+
+def test_case_timeline_can_be_narrowed_to_one_lane():
+    ledger = HandoffDeliveryLedger()
+    ledger.apply(
+        [
+            event("d-primary", "case-944", 1, summary="Primary"),
+            event("d-retry", "case-944", 2, summary="Retry", lane="retry"),
+        ]
+    )
+
+    assert [
+        item.delivery_id for item in ledger.case_timeline("case-944", lane=" retry ")
+    ] == ["d-retry"]
+
+
 def test_delayed_older_epoch_cannot_override_new_epoch():
     ledger = HandoffDeliveryLedger()
     ledger.apply([event("d-1", "sig-9", 1, summary="Current", epoch=19)])
