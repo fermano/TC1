@@ -36,7 +36,7 @@ def schedule_owner_close_warning(
 
     normalized_close_at = _parse_aware_datetime(close_at)
     warn_at = normalized_close_at - timedelta(seconds=warn_before_seconds)
-    if _has_manual_close_before_warning(lifecycle_events, warn_at):
+    if _has_suppressing_event_before_warning(lifecycle_events, warn_at):
         return None
 
     return OwnerCloseWarning(
@@ -47,13 +47,13 @@ def schedule_owner_close_warning(
     )
 
 
-def _has_manual_close_before_warning(
+def _has_suppressing_event_before_warning(
     lifecycle_events: Iterable[CaseLifecycleEvent], warn_at: datetime
 ) -> bool:
     for event in lifecycle_events:
         event_kind = event.kind.strip().lower().replace("-", "_")
         if (
-            event_kind == "manual_closed"
+            event_kind in {"manual_closed", "reopened"}
             and _parse_aware_datetime(event.at) <= warn_at
         ):
             return True
