@@ -10,15 +10,28 @@ def normalize_delivery_owner(owner: str | None) -> str:
     return normalized or DEFAULT_OWNER
 
 
-def filter_delivery_records(records: list[dict], owners: list[str | None] | None = None) -> list[dict]:
+def filter_delivery_records(
+    records: list[dict],
+    owners: list[str | None] | None = None,
+    lanes: list[str | None] | None = None,
+) -> list[dict]:
     """Filter records by canonical owner while preserving record order."""
-    if owners is None:
+    if owners is None and lanes is None:
         return records
-    selected = {normalize_delivery_owner(owner) for owner in owners}
+    selected_owners = None
+    if owners is not None:
+        selected_owners = {normalize_delivery_owner(owner) for owner in owners}
+    selected_lanes = (
+        None if lanes is None else {normalize_delivery_lane(lane) for lane in lanes}
+    )
     return [
         record
         for record in records
-        if normalize_delivery_owner(record.get("owner")) in selected
+        if (
+            selected_owners is None
+            or normalize_delivery_owner(record.get("owner")) in selected_owners
+        )
+        and (selected_lanes is None or _record_lane(record) in selected_lanes)
     ]
 
 
@@ -42,6 +55,10 @@ def delivery_summary(
 
 
 def _summary_lane_label(record: dict) -> str:
+    return _record_lane(record)
+
+
+def _record_lane(record: dict) -> str:
     if "lane" in record:
         return _required_lane_label(record["lane"], "lane")
     if "delivery_lane" in record:
