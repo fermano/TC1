@@ -47,6 +47,70 @@ class TicketWorkflowSeedTests(unittest.TestCase):
         records = [{"owner": None}, {"owner": "alpha"}]
         self.assertEqual(filter_delivery_records(records, [None]), [records[0]])
 
+    def test_missing_lane_filter_returns_all_records(self):
+        records = [{"lane": "primary"}, {"lane": "retry"}]
+        self.assertEqual(filter_delivery_records(records, lanes=None), records)
+
+    def test_empty_lane_filter_returns_no_records(self):
+        self.assertEqual(
+            filter_delivery_records([{"owner": "alpha", "lane": "primary"}], lanes=[]),
+            [],
+        )
+
+    def test_lane_filter_canonicalizes_deduplicates_and_preserves_order(self):
+        records = [
+            {"id": 1, "lane": "Retry"},
+            {"id": 2, "lane": "primary"},
+            {"id": 3, "lane": " retry "},
+            {"id": 4, "lane": "manual-replay"},
+        ]
+        self.assertEqual(
+            filter_delivery_records(records, lanes=[" retry ", "retry"]),
+            [records[0], records[2]],
+        )
+
+    def test_lane_filter_defaults_missing_lane_to_primary(self):
+        records = [{"id": 1}, {"id": 2, "lane": "retry"}]
+        self.assertEqual(filter_delivery_records(records, lanes=[None]), [records[0]])
+
+    def test_lane_filter_uses_legacy_alias_when_canonical_absent(self):
+        records = [
+            {"id": 1, "delivery_lane": "manual-replay"},
+            {"id": 2, "lane": "primary"},
+        ]
+        self.assertEqual(
+            filter_delivery_records(records, lanes=["manual-replay"]),
+            [records[0]],
+        )
+
+    def test_lane_filter_combines_with_owner_filter(self):
+        records = [
+            {"id": 1, "owner": "Ops", "lane": "retry"},
+            {"id": 2, "owner": "Ops", "lane": "primary"},
+            {"id": 3, "owner": "Support", "lane": "retry"},
+        ]
+        self.assertEqual(
+            filter_delivery_records(records, owners=["ops"], lanes=["retry"]),
+            [records[0]],
+        )
+
+    def test_lane_filter_does_not_infer_from_provenance(self):
+        records = [
+            {"id": 1, "source_label": "retry", "lane": "primary"},
+            {"id": 2, "source_label": "primary", "lane": "retry"},
+        ]
+        self.assertEqual(
+            filter_delivery_records(records, lanes=["retry"]),
+            [records[1]],
+        )
+
+    def test_lane_filter_rejects_blank_canonical_without_alias_fallback(self):
+        with self.assertRaisesRegex(ValueError, "lane must"):
+            filter_delivery_records(
+                [{"owner": "alpha", "lane": "  ", "delivery_lane": "retry"}],
+                lanes=["retry"],
+            )
+
     def test_summary_contains_existing_fields(self):
         self.assertEqual(
             delivery_summary(
