@@ -84,6 +84,44 @@ def test_handoff_rows_accept_legacy_event_id_and_return_canonical_records() -> N
     ]
 
 
+def test_handoff_rows_accept_canonical_lane() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "lane": " Retry ",
+        }
+    ]
+
+    assert filter_handoff_rows(rows) == [
+        HandoffRecord("evt-17", "platform", "high", "Queue delay", lane="retry")
+    ]
+
+
+def test_handoff_rows_accept_legacy_delivery_lane_alias() -> None:
+    rows = [
+        {
+            "event_id": "evt-17",
+            "owner": "platform",
+            "severity": "high",
+            "summary": "Queue delay",
+            "delivery_lane": "manual-replay",
+        }
+    ]
+
+    assert filter_handoff_rows(rows) == [
+        HandoffRecord(
+            "evt-17",
+            "platform",
+            "high",
+            "Queue delay",
+            lane="manual-replay",
+        )
+    ]
+
+
 def test_handoff_rows_accept_matching_legacy_identifier_aliases() -> None:
     rows = [
         {

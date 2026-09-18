@@ -30,6 +30,10 @@ class HandoffRecord:
     owner: str
     severity: str
     summary: str
+    lane: str | None = DEFAULT_DELIVERY_LANE
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "lane", normalize_delivery_lane(self.lane))
 
 
 @dataclass(frozen=True)

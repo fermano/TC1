@@ -27,6 +27,24 @@ def test_handoff_record_is_immutable() -> None:
         record.severity = "critical"
 
 
+def test_handoff_record_defaults_to_primary_lane() -> None:
+    record = HandoffRecord("evt-1", "release", "high", "Queue delay")
+
+    assert record.lane == DEFAULT_DELIVERY_LANE
+
+
+def test_handoff_record_normalizes_lane_tokens() -> None:
+    record = HandoffRecord(
+        "evt-1",
+        "release",
+        "high",
+        "Queue delay",
+        lane=" Manual-Replay ",
+    )
+
+    assert record.lane == "manual-replay"
+
+
 def test_delivery_event_and_snapshot_are_immutable() -> None:
     record = HandoffRecord("evt-1", "release", "high", "Queue delay")
     delivery = HandoffDeliveryEvent(18, "d-1", "evt-1", 1, "upsert", record)
