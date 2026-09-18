@@ -1,7 +1,7 @@
 from src.tc1_ash_replay import restore_records
 
 
-def test_active_ash_record_is_queued():
+def test_active_ash_record_is_queued_with_current_artifact():
     records = restore_records([], [{
         "account_id": "iris",
         "lane_id": "mail",
@@ -11,4 +11,5 @@ def test_active_ash_record_is_queued():
         "sendAfter": 12,
     }])
     assert records["iris:mail:rq-11:partner"]["delay_seconds"] == 12
-    assert records["iris:mail:rq-11:partner"]["release"] == "ash-1"
+    assert records["iris:mail:rq-11:partner"]["release"] == "ash-2"
+    assert records["iris:mail:rq-11:partner"]["artifact_ref"] == "ash-rc-2"
