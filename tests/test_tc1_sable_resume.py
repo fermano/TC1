@@ -12,4 +12,5 @@ def test_resume_keeps_one_candidate_packet():
     }])
 
     assert packets["oak:mail:pkt-31:partner"]["send_after_seconds"] == 20
-    assert packets["oak:mail:pkt-31:partner"]["candidate"] == "sb-4"
+    assert packets["oak:mail:pkt-31:partner"]["candidate"] == "sb-5"
+    assert packets["oak:mail:pkt-31:partner"]["artifact_ref"] == "sable-rc-5"
