@@ -45,6 +45,20 @@ def test_manual_close_before_warning_due_suppresses_warning():
     assert warning is None
 
 
+def test_manual_close_at_warning_due_suppresses_warning():
+    warning = schedule_owner_close_warning(
+        "case-944",
+        "support-owner",
+        "2026-09-18T20:00:00Z",
+        warn_before_seconds=900,
+        lifecycle_events=[
+            CaseLifecycleEvent("manual_closed", "2026-09-18T19:45:00Z"),
+        ],
+    )
+
+    assert warning is None
+
+
 def test_reopened_before_warning_due_suppresses_warning():
     warning = schedule_owner_close_warning(
         "case-944",
