@@ -11,9 +11,10 @@ def decode_packet_key(key):
     return tuple(parts)
 
 
-def candidate_context(lane_id, origin):
+def candidate_context(lane_id, origin, artifact_ref):
     return {
-        "candidate": "sb-4",
+        "candidate": "sb-5",
         "lane_signature": f"lane:{lane_id}",
+        "artifact_ref": artifact_ref,
         "origin": origin,
     }
