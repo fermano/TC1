@@ -25,6 +25,8 @@ class _LegacyHandoffRequired(TypedDict):
 class LegacyHandoffRow(_LegacyHandoffRequired, total=False):
     event_id: str | None
     signal_id: str | None
+    lane: str | None
+    delivery_lane: str | None
 
 
 HandoffInput = Union[HandoffRecord, LegacyHandoffRow]
@@ -55,6 +57,7 @@ def filter_handoff_rows(
             owner=row.owner or fallback,
             severity=row.severity,
             summary=row.summary,
+            lane=row.lane,
         )
         for row in row_list
     ]
@@ -63,7 +66,7 @@ def filter_handoff_rows(
         return row_list
     threshold = minimum_severity.strip().lower()
     if threshold not in SEVERITY_RANK:
-        raise ValueError(f"unknown minimum severity: {minimum_severity}")
+        raise ValueError(f"unknown minimum severity: {min_severity}")
 
     minimum_rank = SEVERITY_RANK[threshold]
     return [
@@ -79,17 +82,20 @@ def _normalize_handoff_row(row: HandoffInput) -> HandoffRecord:
         owner = row.owner
         severity = row.severity
         summary = row.summary
+        lane = row.lane
     else:
         signal_id = _legacy_signal_id(row)
         owner = row["owner"]
         severity = row["severity"]
         summary = row["summary"]
+        lane = row.get("lane") or row.get("delivery_lane")
 
     return HandoffRecord(
         signal_id=signal_id,
         owner=owner.strip(),
         severity=severity.strip().lower(),
         summary=summary.strip(),
+        lane=lane,
     )
 
 
@@ -132,6 +138,7 @@ def _collapse_retries(rows: list[HandoffRecord]) -> list[HandoffRecord]:
             owner=row.owner or existing.owner,
             severity=row.severity if row_rank > existing_rank else existing.severity,
             summary=row.summary or existing.summary,
+            lane=row.lane or existing.lane,
         )
 
     return collapsed
