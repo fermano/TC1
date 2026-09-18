@@ -31,6 +31,18 @@ class BatchLimitTests(unittest.TestCase):
             MAX_DELIVERY_BATCH,
         )
 
+    def test_rejects_blank_queue(self):
+        with self.assertRaises(ValueError):
+            validate_delivery_batch([], queue="  ")
+
+    def test_rejects_unknown_queue(self):
+        with self.assertRaises(ValueError):
+            validate_delivery_batch([], queue="bulk-retry")
+
+    def test_partner_prefixed_queue_does_not_inherit_retry_limit(self):
+        with self.assertRaises(ValueError):
+            validate_delivery_batch([], queue="partner-bulk")
+
 
 if __name__ == "__main__":
     unittest.main()
