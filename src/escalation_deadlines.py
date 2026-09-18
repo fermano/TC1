@@ -53,8 +53,8 @@ def _has_suppressing_event_before_warning(
     for event in lifecycle_events:
         event_kind = event.kind.strip().lower().replace("-", "_")
         if (
-            event_kind in {"manual_closed", "reopened"}
-            and _parse_aware_datetime(event.at) < warn_at
+            event_kind == "manual_closed"
+            and _parse_aware_datetime(event.at) <= warn_at
         ):
             return True
     return False
