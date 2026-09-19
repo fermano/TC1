@@ -5,8 +5,8 @@ _checksum_cache = {}
 
 
 def _retry_identity(manifest_id):
-    """Collapse display variants when checking an Ember retry binding."""
-    return manifest_id.split("@", 1)[0].strip().casefold()
+    """Use the complete reader token as Ember's retry identity."""
+    return manifest_id.strip().casefold()
 
 
 def manifest_checksum(manifest_id, rows):
@@ -20,7 +20,8 @@ def manifest_checksum(manifest_id, rows):
             raise ValueError("manifest ID is already bound to a different payload")
         return cached_checksum
 
-    checksum = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    checksum_input = f"{retry_identity}:{payload}"
+    checksum = hashlib.sha256(checksum_input.encode("utf-8")).hexdigest()
     _checksum_cache[retry_identity] = (payload, checksum)
     return checksum
 
