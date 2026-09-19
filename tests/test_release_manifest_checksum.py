@@ -77,7 +77,7 @@ def test_different_manifest_id_can_bind_changed_payload():
     original_checksum = manifest_checksum("manifest-20260613", original_rows)
     changed_checksum = manifest_checksum("manifest-20260614", changed_rows)
 
-    assert changed_checksum != original_checksum
+    assert original_checksum != changed_checksum
 
 
 def test_clear_cache_allows_rebinding_manifest_id():
@@ -98,3 +98,18 @@ def test_non_json_payload_preserves_serializer_error():
 
     with pytest.raises(TypeError, match="not JSON serializable"):
         manifest_checksum("manifest-20260613", [{"invalid": object()}])
+
+
+def test_distinct_platform_tokens_do_not_share_a_retry_binding():
+    clear_manifest_checksum_cache()
+
+    amd64 = manifest_checksum(
+        "ember-17@linux-amd64",
+        [{"artifact": "sha256:7c09", "platform": "linux-amd64"}],
+    )
+    arm64 = manifest_checksum(
+        "ember-17@linux-arm64",
+        [{"artifact": "sha256:9d4a", "platform": "linux-arm64"}],
+    )
+
+    assert amd64 != arm64
