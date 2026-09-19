@@ -15,10 +15,10 @@ def _limit_for_queue(queue: str | None) -> int:
     if queue is None:
         return MAX_DELIVERY_BATCH
 
-    queue_name = queue.strip().lower()
+    queue_name = queue.strip().lower().replace("_", "-")
     if not queue_name:
         raise ValueError("delivery queue must not be blank")
-    if queue_name.startswith("partner-"):
+    if queue_name == PARTNER_RETRY_QUEUE:
         return PARTNER_RETRY_BATCH
     if queue_name in GENERAL_DELIVERY_QUEUES:
         return MAX_DELIVERY_BATCH
