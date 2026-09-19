@@ -1,3 +1,6 @@
+import hashlib
+import json
+
 import pytest
 
 from src.release_manifest_checksum import (
@@ -78,6 +81,59 @@ def test_different_manifest_id_can_bind_changed_payload():
     changed_checksum = manifest_checksum("manifest-20260614", changed_rows)
 
     assert changed_checksum != original_checksum
+
+
+def test_distinct_ember_platform_tokens_do_not_share_retry_binding():
+    clear_manifest_checksum_cache()
+
+    amd64 = manifest_checksum(
+        "EMBER-17@linux-amd64",
+        [{"artifact": "sha256:7c09", "platform": "linux-amd64"}],
+    )
+    arm64 = manifest_checksum(
+        "ember-17@linux-arm64",
+        [{"artifact": "sha256:9d4a", "platform": "linux-arm64"}],
+    )
+
+    assert amd64 != arm64
+
+
+def test_changed_payload_for_same_ember_platform_token_still_raises():
+    clear_manifest_checksum_cache()
+    manifest_checksum(
+        "ember-17@linux-amd64",
+        [{"artifact": "sha256:7c09", "platform": "linux-amd64"}],
+    )
+
+    with pytest.raises(ValueError, match="already bound"):
+        manifest_checksum(
+            "EMBER-17@linux-amd64",
+            [{"artifact": "sha256:changed", "platform": "linux-amd64"}],
+        )
+
+
+def test_provider_spelling_remains_part_of_retry_identity():
+    clear_manifest_checksum_cache()
+
+    underscore = manifest_checksum(
+        "ember-17@eu_west",
+        [{"provider": "eu_west", "artifact": "sha256:7c09"}],
+    )
+    hyphen = manifest_checksum(
+        "ember-17@eu-west",
+        [{"provider": "eu-west", "artifact": "sha256:9d4a"}],
+    )
+
+    assert underscore != hyphen
+
+
+def test_checksum_remains_payload_signature_not_token_scoped():
+    clear_manifest_checksum_cache()
+    rows = [{"artifact": "sha256:7c09", "platform": "linux-amd64"}]
+
+    assert manifest_checksum("ember-17@linux-amd64", rows) == hashlib.sha256(
+        json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def test_clear_cache_allows_rebinding_manifest_id():
