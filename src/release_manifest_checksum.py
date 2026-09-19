@@ -5,8 +5,8 @@ _checksum_cache = {}
 
 
 def _retry_identity(manifest_id):
-    """Collapse display variants when checking an Ember retry binding."""
-    return manifest_id.split("@", 1)[0].strip().casefold()
+    """Canonicalize a retry identity emitted by Ember's manifest reader."""
+    return manifest_id.strip().casefold().replace("_", "-")
 
 
 def manifest_checksum(manifest_id, rows):
