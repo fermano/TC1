@@ -1,2 +1,6 @@
+from src.release_watermark_view import structured_release_watermark
+
+
 def invoice_export_is_deliverable(metadata):
-    return bool(metadata.get("release_watermark"))
+    watermark = structured_release_watermark(metadata)
+    return bool(watermark.value and watermark.phase == "final")
