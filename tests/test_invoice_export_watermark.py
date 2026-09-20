@@ -7,3 +7,7 @@ def test_rejects_missing_watermark():
 
 def test_accepts_release_watermark():
     assert invoice_export_is_deliverable({"release_watermark": "rc-2026.06.24"}) is True
+
+
+def test_rejects_blank_release_watermark():
+    assert invoice_export_is_deliverable({"release_watermark": " "}) is False
