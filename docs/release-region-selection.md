@@ -15,3 +15,13 @@ available for one release window. It is deprecated; callers should migrate to
 form builds a policy and delegates to the same decision engine before returning
 the selected canonical region string, so normalization and validation do not
 diverge between the two paths.
+
+
+## Solstice transition packets
+
+Solstice RC2 packets can carry both the current `region` field and the
+compatibility `region_hint` field. A nonblank current region remains
+authoritative. When the current region is blank or omitted during the
+transition, a nonblank compatibility hint is resolved through the same
+allowlist and default policy. If neither field has a value, the policy default
+is used.
