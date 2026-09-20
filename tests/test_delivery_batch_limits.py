@@ -25,13 +25,19 @@ class BatchLimitTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_delivery_batch([{}] * (PARTNER_RETRY_BATCH + 1), queue="partner-retry")
 
-    def test_partner_import_uses_partner_family_limit(self):
+    def test_partner_import_accepts_atlas_correction_batch(self):
         self.assertEqual(
-            len(validate_delivery_batch([{}] * PARTNER_RETRY_BATCH, queue="partner-import")),
-            PARTNER_RETRY_BATCH,
+            len(validate_delivery_batch([{}] * 72, queue="partner-import")),
+            72,
+        )
+
+    def test_partner_import_keeps_general_limit(self):
+        self.assertEqual(
+            len(validate_delivery_batch([{}] * MAX_DELIVERY_BATCH, queue="partner-import")),
+            MAX_DELIVERY_BATCH,
         )
         with self.assertRaises(ValueError):
-            validate_delivery_batch([{}] * (PARTNER_RETRY_BATCH + 1), queue="partner-import")
+            validate_delivery_batch([{}] * (MAX_DELIVERY_BATCH + 1), queue="partner-import")
 
     def test_rejects_blank_queue(self):
         with self.assertRaises(ValueError):
@@ -41,11 +47,13 @@ class BatchLimitTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_delivery_batch([], queue="bulk-retry")
 
-    def test_partner_prefixed_queue_uses_partner_family_limit(self):
-        self.assertEqual(
-            len(validate_delivery_batch([{}] * PARTNER_RETRY_BATCH, queue="partner-bulk")),
-            PARTNER_RETRY_BATCH,
-        )
+    def test_partner_prefixed_queue_is_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_delivery_batch([], queue="partner-bulk")
+
+    def test_partner_import_underscore_alias_is_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_delivery_batch([], queue="partner_import")
 
 
 if __name__ == "__main__":
