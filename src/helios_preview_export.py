@@ -1,4 +1,4 @@
-"""Compatibility preview used by Helios RC4 export checks."""
+"""Preview used by the current Helios release-export checks."""
 
 from __future__ import annotations
 
