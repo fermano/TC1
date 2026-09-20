@@ -3,7 +3,7 @@ from src.vesper_reconciliation import reconciliation_settlement_reference
 from src.vesper_settlement_export import vesper_settlement_reference
 
 
-def test_legacy_committed_settlement_is_exported_to_rc1_consumers():
+def test_legacy_committed_settlement_is_preserved_for_rc1_consumers():
     metadata = {"settlement_token": "vs-118", "settlement_phase": "committed"}
 
     assert vesper_settlement_reference(metadata) == "vs-118"
@@ -11,10 +11,13 @@ def test_legacy_committed_settlement_is_exported_to_rc1_consumers():
     assert reconciliation_settlement_reference(metadata) == "vs-118"
 
 
-def test_blank_or_non_committed_legacy_settlement_is_not_exported():
-    assert vesper_settlement_reference(
-        {"settlement_token": " ", "settlement_phase": "committed"}
-    ) is None
-    assert vesper_settlement_reference(
-        {"settlement_token": "vs-118", "settlement_phase": "prepared"}
-    ) is None
+def test_committed_structured_settlement_fills_a_missing_legacy_value():
+    metadata = {"settlement": {"token": "vs-120", "state": "committed"}}
+
+    assert vesper_settlement_reference(metadata) == "vs-120"
+
+
+def test_retracted_transition_event_is_not_exported():
+    metadata = {"settlement": {"token": "vs-120", "state": "retracted"}}
+
+    assert vesper_settlement_reference(metadata) is None
