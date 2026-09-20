@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from src.settlement_event_view import structured_settlement_event
+
 
 def legacy_settlement_reference(metadata: Mapping[str, object]) -> str | None:
-    """Return the RC1 settlement reference from its supported legacy payload."""
-
     raw_value = metadata.get("settlement_token")
     if not isinstance(raw_value, str):
         return None
-
     value = raw_value.strip()
     if not value or metadata.get("settlement_phase") != "committed":
         return None
@@ -17,6 +16,13 @@ def legacy_settlement_reference(metadata: Mapping[str, object]) -> str | None:
 
 
 def vesper_settlement_reference(metadata: Mapping[str, object]) -> str | None:
-    """Select the settlement reference emitted by Vesper RC1 exports."""
+    """Prefer the RC1 legacy value, then use a committed structured value."""
 
-    return legacy_settlement_reference(metadata)
+    legacy = legacy_settlement_reference(metadata)
+    if legacy is not None:
+        return legacy
+
+    event = structured_settlement_event(metadata)
+    if event.state == "committed":
+        return event.token
+    return None
