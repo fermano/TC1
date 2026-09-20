@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import overload
 
 from src.region_policy import RegionDecision, RegionPolicy
@@ -37,6 +37,32 @@ def _resolve_region_decision(
     if requested not in allowed:
         raise ValueError(f"release region is not allowed: {requested}")
     return RegionDecision(requested, requested, "requested")
+
+
+def resolve_release_region_request(
+    policy: RegionPolicy,
+    values: Mapping[str, str | None],
+) -> RegionDecision:
+    """Resolve current and compatibility region fields in one place.
+
+    The current region is authoritative when it contains a value. A blank or
+    omitted current field may use the compatibility region_hint during the
+    release transition. Both values use the same policy validation.
+    """
+    current = values.get("region")
+    if current is not None and current.strip():
+        return _resolve_region_decision(policy, current)
+
+    compatibility = values.get("region_hint")
+    if compatibility is not None and compatibility.strip():
+        decision = _resolve_region_decision(policy, compatibility)
+        return RegionDecision(
+            decision.requested_region,
+            decision.selected_region,
+            "compatibility",
+        )
+
+    return _resolve_region_decision(policy, None)
 
 
 @overload
