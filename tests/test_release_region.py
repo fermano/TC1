@@ -1,7 +1,11 @@
 import pytest
 
 from src.region_policy import RegionDecision, RegionPolicy
-from src.release_region import normalize_release_region, resolve_release_region
+from src.release_region import (
+    normalize_release_region,
+    resolve_release_region,
+    resolve_release_region_request,
+)
 
 
 def test_normalizes_supported_aliases():
@@ -75,3 +79,39 @@ def test_legacy_form_accepts_one_pass_allowlist():
     allowed = (region for region in ["us-east", "eu-west"])
 
     assert resolve_release_region("euw1", allowed, "use1") == "eu-west-1"
+
+
+def test_request_prefers_nonblank_current_region_over_compatibility_hint():
+    policy = RegionPolicy(("us-east-1", "eu-west-1"), "eu-west-1")
+
+    assert resolve_release_region_request(
+        policy, {"region": " USE1 ", "region_hint": "euw1"}
+    ) == RegionDecision("us-east-1", "us-east-1", "requested")
+
+
+def test_request_uses_compatibility_hint_when_current_region_is_blank():
+    policy = RegionPolicy(("us-east-1", "eu-west-1"), "us-east-1")
+
+    assert resolve_release_region_request(
+        policy, {"region": " ", "region_hint": " EUW1 "}
+    ) == RegionDecision("eu-west-1", "eu-west-1", "compatibility")
+
+
+def test_request_defaults_when_both_region_forms_are_blank_or_missing():
+    policy = RegionPolicy(("us-east-1", "eu-west-1"), "euw1")
+
+    assert resolve_release_region_request(policy, {}) == RegionDecision(
+        None, "eu-west-1", "default"
+    )
+    assert resolve_release_region_request(
+        policy, {"region": "", "region_hint": " "}
+    ) == RegionDecision(None, "eu-west-1", "default")
+
+
+def test_request_rejects_explicit_disallowed_current_region_even_with_hint():
+    policy = RegionPolicy(("us-east-1", "eu-west-1"), "eu-west-1")
+
+    with pytest.raises(ValueError, match="not allowed"):
+        resolve_release_region_request(
+            policy, {"region": "ap-south-1", "region_hint": "euw1"}
+        )
